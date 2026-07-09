@@ -17,7 +17,10 @@ cd "$REPO_DIR" 2>/dev/null || exit 0
 ls tests/test_*.py >/dev/null 2>&1 || exit 0
 
 export PATH="$HOME/.local/bin:$PATH"
-OUT=$(uv run pytest -x -q tests/ 2>&1)
+# iCloud Desktop sync sporadically sets the macOS hidden flag on .pth files,
+# which modern Python skips (breaking `import sideout`). Repair before running.
+chflags nohidden .venv/lib/python*/site-packages/*.pth 2>/dev/null
+OUT=$(uv run --no-sync pytest -x -q tests/ 2>&1)
 STATUS=$?
 if [ $STATUS -ne 0 ]; then
   echo "pytest FAILED after edit to $FILE:" >&2

@@ -1,6 +1,6 @@
 # sideOut — SPEC (source of truth)
 
-> **Revision 2 (2026-07-09).** Approved change from the original kickoff: the core architecture and Phases 1–3 are unchanged, but the project now targets "all-around impressive to technical reviewers" — Phase 4 gains production-rigor conventions (lint/type/coverage CI, Docker, lockfile), and two phases are added: **Phase 5 (validation vs published reference data)** and **Phase 6 (static in-browser demo)**. The sample clip is `samples/demo.mov` (not `.mp4`). The pose model file is auto-downloaded to `models/` (gitignored), never committed.
+> **Revision 2 (2026-07-09).** Approved change from the original kickoff: the core architecture and Phases 1–3 are unchanged, but the project now targets "all-around impressive to technical reviewers" — Phase 4 gains production-rigor conventions (lint/type/coverage CI, Docker, lockfile), and two phases are added: **Phase 5 (validation vs published reference data)** and **Phase 6 (static in-browser demo)**. The sample clip is `samples/demo.mov` (not `.mp4`). The pose model file is auto-downloaded to `~/.cache/sideout/models/` (override with `SIDEOUT_MODEL_DIR`), never committed.
 
 I'm building **sideOut**, an open-source, local-first volleyball performance-analysis toolkit. I captained Brown Men's Volleyball to a D1AAA national championship and did scouting/analysis by hand; this project automates it. First module: **Jump Lab** — a pose-estimation pipeline that analyzes volleyball attack approaches from a side-view phone video.
 
@@ -29,7 +29,7 @@ sideout/
   README.md
   .gitignore            # ignores *.mp4/*.mov except samples/demo.mp4|demo.mov
   samples/              # one short sample clip (samples/demo.mov)
-  models/               # gitignored; pose model auto-downloaded on first run
+  # (pose model auto-downloads to ~/.cache/sideout/models — SIDEOUT_MODEL_DIR overrides)
   src/sideout/
     cli.py              # Typer app: `sideout jump analyze <video>`, `sideout jump report <run>`
     pose/extractor.py   # video -> keypoints DataFrame
