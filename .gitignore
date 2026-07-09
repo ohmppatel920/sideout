@@ -8,9 +8,13 @@
 *.m4v
 *.webm
 !samples/demo.mp4
+!samples/demo.mov
 
 # Per-run derived outputs (keypoints, metrics, charts, overlays)
 runs/
+
+# Auto-downloaded pose model weights (~9 MB; fetched on first run)
+models/
 
 # --- Python ----------------------------------------------------------------
 __pycache__/
@@ -24,7 +28,6 @@ dist/
 .venv/
 venv/
 env/
-.python-version
 
 # Tooling caches
 .pytest_cache/

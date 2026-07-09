@@ -1,5 +1,7 @@
 # sideOut — SPEC (source of truth)
 
+> **Revision 2 (2026-07-09).** Approved change from the original kickoff: the core architecture and Phases 1–3 are unchanged, but the project now targets "all-around impressive to technical reviewers" — Phase 4 gains production-rigor conventions (lint/type/coverage CI, Docker, lockfile), and two phases are added: **Phase 5 (validation vs published reference data)** and **Phase 6 (static in-browser demo)**. The sample clip is `samples/demo.mov` (not `.mp4`). The pose model file is auto-downloaded to `models/` (gitignored), never committed.
+
 I'm building **sideOut**, an open-source, local-first volleyball performance-analysis toolkit. I captained Brown Men's Volleyball to a D1AAA national championship and did scouting/analysis by hand; this project automates it. First module: **Jump Lab** — a pose-estimation pipeline that analyzes volleyball attack approaches from a side-view phone video.
 
 Work in the phases below, **in order, stopping after each phase** so I can review before you continue. Write tests as you go, not at the end. Commit at every phase boundary with a clear message.
@@ -16,7 +18,8 @@ Key principle: video is treated like source code; keypoints and metrics are deri
 - MediaPipe (Tasks API — `PoseLandmarker`, video mode), OpenCV, ffmpeg-python only if needed
 - NumPy, pandas, pyarrow (parquet), matplotlib
 - Typer for CLI, pytest for tests
-- NO web UI, NO database, NO GPU dependencies in this phase. Keep dependencies minimal.
+- Dev tooling: `ruff` (lint + format), `mypy` (typed public APIs), `pytest-cov` (coverage) — enforced in CI from Phase 4
+- NO web UI *server*, NO database, NO GPU dependencies. The Phase 6 demo is a **static page** (no backend) that replays pre-computed pipeline outputs — it duplicates zero physics logic. Keep dependencies minimal.
 
 ## Repo structure
 
@@ -24,8 +27,9 @@ Key principle: video is treated like source code; keypoints and metrics are deri
 sideout/
   pyproject.toml
   README.md
-  .gitignore            # ignores *.mp4/*.mov except samples/demo.mp4
-  samples/              # one short sample clip (I'll add it)
+  .gitignore            # ignores *.mp4/*.mov except samples/demo.mp4|demo.mov
+  samples/              # one short sample clip (samples/demo.mov)
+  models/               # gitignored; pose model auto-downloaded on first run
   src/sideout/
     cli.py              # Typer app: `sideout jump analyze <video>`, `sideout jump report <run>`
     pose/extractor.py   # video -> keypoints DataFrame
@@ -37,6 +41,8 @@ sideout/
     fixtures.py         # synthetic keypoint generators
     test_events.py
     test_metrics.py
+  validation/           # Phase 5: methodology + error analysis -> VALIDATION.md
+  demo/                 # Phase 6: static demo page (GitHub Pages)
   runs/                 # gitignored; per-run outputs
 ```
 
@@ -78,7 +84,34 @@ Tests: synthetic fixtures in `tests/fixtures.py` that generate ideal keypoint tr
 
 ## Phase 4 — Polish for public
 
-README upgrade: demo GIF placeholder, quickstart, capture protocol (side view, tripod, 8–10 m, full body in frame), **honest limitations section** (monocular, no depth reconstruction, flight-time assumes equal takeoff/landing level, side-view required), roadmap, license (MIT). Add GitHub Actions: pytest on push.
+README upgrade: demo GIF placeholder, quickstart, capture protocol (side view, tripod, 8–10 m, full body in frame), **honest limitations section** (monocular, no depth reconstruction, flight-time assumes equal takeoff/landing level, side-view required), roadmap, license (MIT).
+
+Production-rigor additions (cheap, compounds — the "ships production code" signal):
+- GitHub Actions CI on push: `pytest` + coverage, `ruff check`, `ruff format --check`, `mypy src/`
+- Commit `uv.lock` and `.python-version` — fully reproducible env
+- `Dockerfile` so anyone runs the pipeline in one command without touching their Python
+- README badges: CI status, coverage, license, Python version
+
+**Done when:** CI is green on GitHub and the README sells the project honestly. STOP.
+
+## Phase 5 — Validation & error analysis (the credibility phase)
+
+Turn "I built a thing" into "I built a thing and measured how accurate it is":
+- `validation/` — a small, reproducible study comparing the pipeline's flight-time jump height against published reference values for the flight-time method vs force plates (cite sources: e.g. validated MyJump/force-plate comparison literature).
+- Report bias and error bounds honestly; quantify sensitivity to fps (e.g. what does ±1 frame at 30/60/240 fps do to height error? — this is a pure math analysis, no data collection needed) and to event-detection tolerance.
+- Output: `VALIDATION.md` with methodology, error tables/plots, and limitations. Linked prominently from README.
+
+**Done when:** a skeptical reviewer can read VALIDATION.md and trust (or fairly judge) the numbers. STOP.
+
+## Phase 6 — Static in-browser demo (the resume link)
+
+A recruiter clicks a link and sees a real volleyball jump analyzed — zero install:
+- Pre-process `samples/demo.mov` offline with the real Python pipeline → overlay video (web-encoded), `metrics.json`, chart data.
+- Static page (plain HTML/JS or minimal framework; hosted free on GitHub Pages): replays the annotated video with synchronized event markers and live metric readouts, shows per-jump metrics and charts.
+- **No physics logic in JS** — the page only renders artifacts the Python pipeline produced. The pipeline stays the single source of truth.
+- "Analyze your own clip in-browser" is explicitly deferred to v0.2.
+
+**Done when:** a public URL shows the demo and it's linked at the top of the README. STOP.
 
 ## Agent workflow (how to operate — follow this, not just the what)
 
@@ -102,7 +135,7 @@ Work like a small engineering team with separated roles/contexts:
 
 (For me, the human: allowlist `uv run pytest`, `uv sync`, and `git commit` in `/permissions` so I'm not clicking approvals all weekend.)
 
-Front-end/back-end specialist agents are deliberately NOT part of v0.1 (no UI). Introduce them in v0.2 when the Next.js + FastAPI layer starts.
+Front-end/back-end specialist agents are deliberately NOT part of v0.1. The Phase 6 static demo is a single page rendering pre-computed artifacts — it does not warrant a specialist agent. Introduce them in v0.2 if/when an interactive upload-your-own-clip layer starts.
 
 ## Constraints & style
 
