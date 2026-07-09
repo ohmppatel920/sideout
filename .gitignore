@@ -1,0 +1,40 @@
+# --- sideOut: video is source, not artifact -------------------------------
+# Raw videos are NEVER committed. Path references only.
+# Ignore all common video formats, then allow ONLY the single sample clip.
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.m4v
+*.webm
+!samples/demo.mp4
+
+# Per-run derived outputs (keypoints, metrics, charts, overlays)
+runs/
+
+# --- Python ----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Environments
+.venv/
+venv/
+env/
+.python-version
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- OS / editor -----------------------------------------------------------
+.DS_Store
+*.swp
+.idea/
+.vscode/
