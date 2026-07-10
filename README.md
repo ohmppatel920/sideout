@@ -92,6 +92,16 @@ For trustworthy numbers, film like this:
 
 ---
 
+## Accuracy
+
+The jump-height physics is validated and its error is quantified — see
+[`VALIDATION.md`](VALIDATION.md) for the full analysis: the flight-time method
+vs force-plate references (with citations), a frame-rate sensitivity study
+(why 60 fps+ matters), and the engine's tested error floor (≤ ±4 cm on clean
+input). Short version: the biggest real-world risk isn't the physics, it's
+monocular pose tracking the wrong athlete in a crowd — which the capture
+protocol addresses.
+
 ## Honest limitations
 
 sideOut is a monocular (single-camera) tool. Be aware:

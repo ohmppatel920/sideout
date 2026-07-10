@@ -167,6 +167,16 @@ clearly in frame — more on that when we get to Phase 6.
   so the lighter, server-friendly version is the right fit and makes CI/Docker
   simpler. **87% test coverage.**
 
+**Phase 5 — prove it's accurate.** A `VALIDATION.md` that a skeptic can read to
+trust (or fairly judge) the numbers: the flight-time method compared to
+force-plate lab equipment with real citations (a validated video app matches
+force plates almost perfectly); a **frame-rate study** showing exactly how much
+accuracy you lose at 30 fps vs 60/120/240 (this is why we say "film at 60 fps");
+and the tested error floor (≤ ±4 cm on clean input). The frame-rate numbers come
+from a small reproducible script, not hand-waving. The honest headline: the
+biggest real-world error isn't the physics — it's the pose model tracking the
+wrong player in a crowd. **66 tests pass.**
+
 ## Mini-glossary
 
 - **Pose estimation** — software that finds where a person's joints are in an image.
