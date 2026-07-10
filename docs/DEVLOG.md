@@ -193,6 +193,18 @@ The one video the repo now allows committing is the *rendered* demo overlay — 
 deliberate, narrow exception to the never-commit-video rule, just for the
 published page.
 
+**Live, with a real jump.** You filmed a clean single-athlete clip; the pipeline
+nailed it — **100% pose detection**, 270° phone rotation auto-handled, and it
+locked onto the right (only) athlete. Calibrated with your height (6'1") and
+standing reach (8'0"), the live demo now shows all the metrics for a real jump:
+**height 0.49 m, touch height 2.93 m (9'7"), depth 0.13 m, loading 0.42 s,
+approach 1.8 m/s, arm-lead 0.22 s.**
+
+**Bonus metric — touch height.** Added *touch height* = standing reach + jump
+height: how high you actually reach at the top of your jump, which is the number
+that matters for blocking and spiking (yours clears the men's net by over a
+foot). It's the one metric that makes the tool read as genuinely volleyball-aware.
+
 ## Mini-glossary
 
 - **Pose estimation** — software that finds where a person's joints are in an image.

@@ -22,7 +22,7 @@ cd sideout
 uv sync                      # create the environment + install deps
 
 # One command: video → keypoints + metrics.json + charts + annotated video
-uv run sideout jump analyze samples/demo.mov --height-cm 190
+uv run sideout jump analyze samples/demo.mov --height-cm 185 --reach-cm 244
 
 # Re-generate metrics + charts from a saved run (no pose re-run)
 uv run sideout jump report runs/<run-dir>
@@ -38,7 +38,7 @@ Outputs land in `runs/<video-stem>-<timestamp>/`:
 | `chart_metrics_vs_height.png` | Each metric plotted against jump height |
 | `overlay.mp4` | The video with skeleton, event flags, and live metric readout |
 
-`--height-cm` (your standing height) unlocks the metrics that need real-world scale (depth in meters, approach velocity in m/s). Everything else is computed without it.
+`--height-cm` (your standing height) unlocks the metrics that need real-world scale (depth in meters, approach velocity in m/s); `--reach-cm` (your flat-footed standing reach) unlocks **touch height** — how high you reach at the apex, the number coaches care about. Everything else is computed without them.
 
 ### Docker (no local Python)
 
@@ -71,6 +71,7 @@ metrics.json + charts + annotated video
 | Metric | Unit | How |
 |--------|------|-----|
 | Jump height | m | Flight-time method: `h = g·t²/8` |
+| Touch height | m | Standing reach + jump height (reach at apex) |
 | Countermovement depth | m + normalized | Lowest hip during load minus standing hip |
 | Loading time | s | Load-start → takeoff |
 | Approach velocity | m/s | Horizontal hip speed over ~0.5 s before the plant |
