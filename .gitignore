@@ -16,11 +16,6 @@ runs/
 # Auto-downloaded pose model weights (~9 MB; fetched on first run)
 models/
 
-# Generated demo assets (derived from a run; rebuilt by demo/build_demo.py).
-# Kept out of git until a clean showcase clip is chosen for publishing.
-demo/assets/
-demo/index.html
-
 # --- Python ----------------------------------------------------------------
 __pycache__/
 *.py[cod]
