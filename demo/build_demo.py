@@ -22,6 +22,49 @@ DEMO_DIR = Path(__file__).parent
 ASSETS = DEMO_DIR / "assets"
 
 
+def _build_gif(overlay_mp4: Path, out_gif: Path, max_width: int = 360, stride: int = 2) -> bool:
+    """Transcode the overlay video to a browser-universal animated GIF.
+
+    OpenCV writes MPEG-4 Part 2, which browsers won't play in a <video> tag, and
+    ffmpeg isn't assumed present — so we read frames with OpenCV and write an
+    optimized looping GIF with Pillow. Downscaled and frame-strided to keep the
+    file small. Returns False if the source can't be read.
+    """
+    import cv2
+    from PIL import Image
+
+    cap = cv2.VideoCapture(str(overlay_mp4))
+    if not cap.isOpened():
+        return False
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    frames: list[Image.Image] = []
+    idx = 0
+    while True:
+        ok, bgr = cap.read()
+        if not ok:
+            break
+        if idx % stride == 0:
+            h, w = bgr.shape[:2]
+            scale = max_width / w
+            small = cv2.resize(bgr, (max_width, int(h * scale)), interpolation=cv2.INTER_AREA)
+            rgb = cv2.cvtColor(small, cv2.COLOR_BGR2RGB)
+            frames.append(Image.fromarray(rgb).convert("P", palette=Image.ADAPTIVE))
+        idx += 1
+    cap.release()
+    if not frames:
+        return False
+    frames[0].save(
+        out_gif,
+        save_all=True,
+        append_images=frames[1:],
+        loop=0,
+        duration=int(stride * 1000 / fps),
+        optimize=True,
+        disposal=2,
+    )
+    return True
+
+
 def _metric_cards(metrics: dict) -> str:
     if not metrics["jumps"]:
         return '<p class="muted">No jump detected in this clip.</p>'
@@ -59,7 +102,9 @@ HTML = """<!doctype html>
           padding:.15rem .5rem; border-radius:999px; vertical-align:middle; }}
   section {{ margin-top:2.5rem; }}
   h2 {{ font-size:1.1rem; border-bottom:1px solid var(--line); padding-bottom:.4rem; }}
-  video, img {{ width:100%; border-radius:10px; border:1px solid var(--line); background:#000; }}
+  .clip {{ max-width:100%; max-height:80vh; width:auto; display:block; margin:0 auto;
+           border-radius:10px; border:1px solid var(--line); background:#000; }}
+  img {{ width:100%; border-radius:10px; border:1px solid var(--line); background:#000; }}
   .cards {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.75rem; }}
   .card {{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:1rem; }}
   .card .val {{ font-size:1.6rem; font-weight:700; }}
@@ -81,10 +126,7 @@ HTML = """<!doctype html>
 
   <section>
     <h2>Annotated clip</h2>
-    <video controls muted playsinline poster="{poster}">
-      <source src="{overlay}" type="video/mp4">
-      Your browser can't play the annotated video.
-    </video>
+    <img class="clip" src="{overlay}" alt="Annotated jump: skeleton overlay with event flags and metric readout">
     <p class="muted">Skeleton overlay with LOAD / TAKEOFF / LANDING flags and a live metric readout.</p>
   </section>
 
@@ -121,8 +163,15 @@ def build(run_dir: str | Path) -> Path:
 
     ASSETS.mkdir(parents=True, exist_ok=True)
     assets: dict[str, str] = {}
+
+    # The annotated overlay → a browser-universal looping GIF (see _build_gif).
+    overlay_mp4 = run_dir / "overlay.mp4"
+    if overlay_mp4.exists() and _build_gif(overlay_mp4, ASSETS / "overlay.gif"):
+        assets["overlay"] = "assets/overlay.gif"
+    else:
+        assets["overlay"] = ""
+
     for src_name, key in [
-        ("overlay.mp4", "overlay"),
         ("chart_heights.png", "chart_heights"),
         ("chart_metrics_vs_height.png", "chart_scatter"),
     ]:
@@ -134,7 +183,6 @@ def build(run_dir: str | Path) -> Path:
             assets[key] = ""
 
     html = HTML.format(
-        poster="",
         overlay=assets["overlay"],
         chart_heights=assets["chart_heights"],
         chart_scatter=assets["chart_scatter"],
