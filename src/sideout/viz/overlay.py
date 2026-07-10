@@ -89,6 +89,8 @@ def _flags_by_frame(jumps: list[JumpMetrics], frame_t_ms: np.ndarray) -> dict[in
 def _readout_lines(j: JumpMetrics) -> list[str]:
     """Human-readable metric lines shown after a jump lands."""
     lines = [f"Jump #{j.index + 1}", f"height {j.jump_height_m:.2f} m"]
+    if j.touch_height_m is not None:
+        lines.append(f"touch  {j.touch_height_m:.2f} m")
     if j.countermovement_depth_m is not None:
         lines.append(f"depth  {j.countermovement_depth_m:.2f} m")
     if j.approach_velocity_m_s is not None:

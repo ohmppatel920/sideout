@@ -93,7 +93,11 @@ def render_report(analysis: SessionAnalysis, run_dir: str | Path) -> dict[str, A
     return written
 
 
-def write_report(run_dir: str | Path, height_cm: float | None = None) -> dict[str, Any]:
+def write_report(
+    run_dir: str | Path,
+    height_cm: float | None = None,
+    standing_reach_cm: float | None = None,
+) -> dict[str, Any]:
     """Analyze ``run_dir/keypoints.parquet`` and write metrics.json + charts.
 
     Does NOT run pose estimation — reads the existing parquet only.
@@ -102,5 +106,7 @@ def write_report(run_dir: str | Path, height_cm: float | None = None) -> dict[st
     parquet = run_dir / "keypoints.parquet"
     if not parquet.exists():
         raise FileNotFoundError(f"no keypoints.parquet in {run_dir}")
-    analysis = analyze_run(pd.read_parquet(parquet), height_cm=height_cm)
+    analysis = analyze_run(
+        pd.read_parquet(parquet), height_cm=height_cm, standing_reach_cm=standing_reach_cm
+    )
     return render_report(analysis, run_dir)

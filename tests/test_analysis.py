@@ -68,6 +68,26 @@ class TestUncalibrated:
         assert j.approach_velocity_m_s is None
 
 
+class TestTouchHeight:
+    def test_touch_is_reach_plus_jump_height(self):
+        sj = synthetic_jump_df()
+        a = analyze_run(sj.df, standing_reach_cm=243.84)  # 8'0"
+        (j,) = a.jumps
+        assert j.touch_height_m == pytest.approx(2.4384 + j.jump_height_m, abs=1e-4)
+        assert a.aggregates["best_touch_height_m"] == pytest.approx(j.touch_height_m)
+
+    def test_touch_needs_no_pixel_calibration(self):
+        # Touch height works from reach alone — no --height-cm required.
+        a = analyze_run(synthetic_jump_df().df, standing_reach_cm=250.0)
+        assert a.calibrated is False
+        assert a.jumps[0].touch_height_m is not None
+
+    def test_touch_none_without_reach(self):
+        a = analyze_run(synthetic_jump_df().df)
+        assert a.jumps[0].touch_height_m is None
+        assert "best_touch_height_m" not in a.aggregates
+
+
 class TestSession:
     def test_no_jump_clip(self):
         a = analyze_run(synthetic_jump_df(jumps=[]).df)

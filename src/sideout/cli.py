@@ -31,7 +31,12 @@ def analyze(
     height_cm: float | None = typer.Option(
         None,
         "--height-cm",
-        help="Athlete standing height in cm; enables meter-scaled metrics (Phase 2+).",
+        help="Athlete standing height in cm; enables meter-scaled metrics.",
+    ),
+    reach_cm: float | None = typer.Option(
+        None,
+        "--reach-cm",
+        help="Athlete flat-footed standing reach in cm; enables touch height.",
     ),
 ) -> None:
     """Extract pose, detect jumps, and write metrics + charts + annotated video.
@@ -61,7 +66,7 @@ def analyze(
         f"wrists {summary['mean_visibility_wrists']:.2f}"
     )
 
-    analysis = analyze_run(df, height_cm=height_cm)
+    analysis = analyze_run(df, height_cm=height_cm, standing_reach_cm=reach_cm)
     render_report(analysis, run_dir)
     overlay_path = render_overlay(meta.video_path, df, analysis.jumps, run_dir / "overlay.mp4")
 
@@ -74,11 +79,14 @@ def report(
     height_cm: float | None = typer.Option(
         None, "--height-cm", help="Athlete standing height in cm for meter-scaled metrics."
     ),
+    reach_cm: float | None = typer.Option(
+        None, "--reach-cm", help="Athlete flat-footed standing reach in cm for touch height."
+    ),
 ) -> None:
     """Regenerate metrics.json + charts from a run's parquet (no pose re-run)."""
     from sideout.jump.report import write_report
 
-    written = write_report(run_dir, height_cm=height_cm)
+    written = write_report(run_dir, height_cm=height_cm, standing_reach_cm=reach_cm)
     typer.echo(f"Wrote {written['metrics']}")
     for key in ("chart_heights", "chart_metrics_vs_height"):
         if key in written:
@@ -92,6 +100,8 @@ def _print_jump_summary(
     typer.echo(f"\n  jumps detected     : {analysis.n_jumps}")
     for j in analysis.jumps:
         parts = [f"#{j.index + 1}", f"height {j.jump_height_m:.2f} m"]
+        if j.touch_height_m is not None:
+            parts.append(f"touch {j.touch_height_m:.2f} m")
         if j.countermovement_depth_m is not None:
             parts.append(f"depth {j.countermovement_depth_m:.2f} m")
         if j.approach_velocity_m_s is not None:

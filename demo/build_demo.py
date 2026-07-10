@@ -70,6 +70,8 @@ def _metric_cards(metrics: dict) -> str:
         return '<p class="muted">No jump detected in this clip.</p>'
     j = metrics["jumps"][0]
     cards = [("Jump height", f"{j['jump_height_m']:.2f} m")]
+    if j.get("touch_height_m") is not None:
+        cards.append(("Touch height", f"{j['touch_height_m']:.2f} m"))
     if j.get("countermovement_depth_m") is not None:
         cards.append(("Countermovement depth", f"{j['countermovement_depth_m']:.2f} m"))
     if j.get("loading_time_s") is not None:

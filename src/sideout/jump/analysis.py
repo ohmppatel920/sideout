@@ -39,6 +39,7 @@ class JumpMetrics:
     loading_time_s: float | None
     approach_velocity_m_s: float | None
     arm_swing_timing_s: float | None
+    touch_height_m: float | None  # standing reach + jump height (reach at apex)
 
     def to_dict(self) -> dict[str, Any]:
         return {k: v for k, v in self.__dict__.items()}
@@ -51,6 +52,7 @@ class SessionAnalysis:
     n_jumps: int
     calibrated: bool
     athlete_height_cm: float | None
+    standing_reach_cm: float | None
     m_per_unit: float | None
     jumps: list[JumpMetrics]
     aggregates: dict[str, Any] = field(default_factory=dict)
@@ -60,6 +62,7 @@ class SessionAnalysis:
             "n_jumps": self.n_jumps,
             "calibrated": self.calibrated,
             "athlete_height_cm": self.athlete_height_cm,
+            "standing_reach_cm": self.standing_reach_cm,
             "m_per_unit": self.m_per_unit,
             "aggregates": self.aggregates,
             "jumps": [j.to_dict() for j in self.jumps],
@@ -81,11 +84,20 @@ def _standing_eye_ankle(series: JumpSeries, before_s: float) -> tuple[float, flo
 
 
 def _metrics_for_jump(
-    series: JumpSeries, ev: JumpEvent, index: int, m_per_unit: float | None
+    series: JumpSeries,
+    ev: JumpEvent,
+    index: int,
+    m_per_unit: float | None,
+    standing_reach_cm: float | None = None,
 ) -> JumpMetrics:
     """Compute every metric for a single detected jump."""
     flight = ev.flight_time_s
     height_m = metrics.jump_height_m(flight)
+
+    # Touch height = flat-footed standing reach + jump height (how high the
+    # athlete reaches at the apex — the number that matters for blocking and
+    # spiking). Needs standing reach but no pixel calibration.
+    touch_height_m = round(standing_reach_cm / 100.0 + height_m, 4) if standing_reach_cm else None
 
     # Countermovement depth and loading time exist only when a load phase was
     # detected. Without one (e.g. a block jump straight out of the approach)
@@ -121,6 +133,7 @@ def _metrics_for_jump(
         loading_time_s=round(loading, 4) if loading is not None else None,
         approach_velocity_m_s=round(approach_v, 3) if approach_v is not None else None,
         arm_swing_timing_s=round(arm, 4),
+        touch_height_m=touch_height_m,
     )
 
 
@@ -129,20 +142,29 @@ def _aggregate(jumps: list[JumpMetrics]) -> dict[str, Any]:
     if not jumps:
         return {}
     heights = [j.jump_height_m for j in jumps]
-    return {
+    agg: dict[str, Any] = {
         "best_jump_height_m": round(max(heights), 4),
         "mean_jump_height_m": round(float(np.mean(heights)), 4),
         "mean_flight_time_s": round(float(np.mean([j.flight_time_s for j in jumps])), 4),
     }
+    touches = [j.touch_height_m for j in jumps if j.touch_height_m is not None]
+    if touches:
+        agg["best_touch_height_m"] = round(max(touches), 4)
+    return agg
 
 
-def analyze_run(df: pd.DataFrame, height_cm: float | None = None) -> SessionAnalysis:
+def analyze_run(
+    df: pd.DataFrame,
+    height_cm: float | None = None,
+    standing_reach_cm: float | None = None,
+) -> SessionAnalysis:
     """Analyze a keypoints DataFrame into per-jump metrics + session aggregates.
 
     ``height_cm`` (athlete standing height) unlocks the meter-scaled metrics
-    (countermovement depth in meters, approach velocity). Everything else —
-    jump height (flight-time), loading time, arm-swing timing, normalized depth
-    — is computed with or without it.
+    (countermovement depth in meters, approach velocity). ``standing_reach_cm``
+    (flat-footed reach) unlocks touch height. Everything else — jump height
+    (flight-time), loading time, arm-swing timing, normalized depth — is
+    computed with or without them.
     """
     series = build_series(df)
     events = detect_jumps(series)
@@ -153,11 +175,15 @@ def analyze_run(df: pd.DataFrame, height_cm: float | None = None) -> SessionAnal
         eye_y, ankle_y = _standing_eye_ankle(series, before_s=plant_s)
         m_per_unit = metrics.calibration_m_per_unit(eye_y, ankle_y, height_cm / 100.0)
 
-    jumps = [_metrics_for_jump(series, ev, i, m_per_unit) for i, ev in enumerate(events)]
+    jumps = [
+        _metrics_for_jump(series, ev, i, m_per_unit, standing_reach_cm)
+        for i, ev in enumerate(events)
+    ]
     return SessionAnalysis(
         n_jumps=len(jumps),
         calibrated=m_per_unit is not None,
         athlete_height_cm=height_cm,
+        standing_reach_cm=standing_reach_cm,
         m_per_unit=round(m_per_unit, 5) if m_per_unit else None,
         jumps=jumps,
         aggregates=_aggregate(jumps),

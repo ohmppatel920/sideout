@@ -55,6 +55,7 @@ class TestPureHelpers:
             loading_time_s=0.1,
             approach_velocity_m_s=2.4,
             arm_swing_timing_s=0.2,
+            touch_height_m=2.4,
         )
         flags = _flags_by_frame([j], t_ms)
         assert flags[time_to_frame(0.2, t_ms)] == "LOAD"  # takeoff - loading_time
@@ -86,6 +87,7 @@ class TestRender:
             loading_time_s=0.1,
             approach_velocity_m_s=2.4,
             arm_swing_timing_s=0.2,
+            touch_height_m=2.4,
         )
         out = render_overlay(video, sj.df, [j], tmp_path / "overlay.mp4")
         assert out.exists()
