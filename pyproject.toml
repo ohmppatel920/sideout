@@ -10,7 +10,7 @@ keywords = ["volleyball", "pose-estimation", "biomechanics", "sports-analytics",
 
 dependencies = [
     "mediapipe>=0.10.9",
-    "opencv-python>=4.9",
+    "opencv-python-headless>=4.9",  # headless: no GUI, lighter for CI/Docker/servers
     "numpy>=1.26",
     "pandas>=2.1",
     "pyarrow>=15.0",

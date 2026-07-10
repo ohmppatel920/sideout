@@ -153,6 +153,20 @@ clearly in frame — more on that when we get to Phase 6.
 
 ---
 
+**Phase 4 — polish for the public.** Made the project read as production-grade:
+- **Automatic checks on GitHub (CI).** Every push now runs the tests, the
+  formatter, the linter, and the type-checker on GitHub's servers. A green
+  badge at the top of the README proves it's healthy — recruiters trust that.
+- **README rewrite** with a real quickstart, the filming guide, the metrics
+  table, an **honest limitations** section (what the tool can't do — a maturity
+  signal), and the roadmap.
+- **Dockerfile** so anyone can run it in one command without installing Python.
+  (Written this session but not built here — Docker wasn't available on this
+  machine; it'll be verified when someone builds it.)
+- Switched OpenCV to the **headless** build — this tool never opens a window,
+  so the lighter, server-friendly version is the right fit and makes CI/Docker
+  simpler. **87% test coverage.**
+
 ## Mini-glossary
 
 - **Pose estimation** — software that finds where a person's joints are in an image.
