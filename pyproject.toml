@@ -51,6 +51,8 @@ select = ["E", "F", "I", "UP", "B", "SIM", "NPY"]
 [tool.ruff.lint.per-file-ignores]
 # B008: function calls in argument defaults is Typer's documented CLI idiom.
 "src/sideout/cli.py" = ["B008"]
+# E501: the HTML template string legitimately has long lines.
+"demo/build_demo.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.11"
