@@ -39,7 +39,7 @@ class JumpSeries:
     dt_s: float  # grid step [s] (median real frame interval)
     hip_y: np.ndarray  # mean of both hips, smoothed
     hip_x: np.ndarray
-    ankle_y: np.ndarray  # mean of both ankles, smoothed
+    ankle_y: np.ndarray  # PLANTED foot: per-frame MAX image-y over both ankles, smoothed
     wrist_y: np.ndarray  # mean of both wrists, smoothed
     eye_y: np.ndarray  # mean of both eyes, smoothed (calibration)
     hip_up_vel: np.ndarray  # physical up velocity of hips [norm units / s]
@@ -53,6 +53,18 @@ def _joint_trace(df: pd.DataFrame, ids: tuple[int, ...], coord: str) -> pd.Serie
     """Per-frame mean of ``coord`` over the given landmark ids (NaN where lost)."""
     sub = df[df["landmark_id"].isin([int(i) for i in ids])]
     return sub.groupby("frame")[coord].mean()
+
+
+def _planted_ankle_trace(df: pd.DataFrame, coord: str) -> pd.Series:
+    """Per-frame MAX image-y over both ankles = the planted (lower) foot.
+
+    On a running approach one foot is planted and one is lifting every stride,
+    so the *mean* ankle sits below true ground. The planted foot (max image y)
+    is the correct ground reference; during flight both feet are up, so the max
+    still rises and the jump is still detected.
+    """
+    sub = df[df["landmark_id"].isin([int(i) for i in ANKLES])]
+    return sub.groupby("frame")[coord].max()
 
 
 def _smooth(x: np.ndarray, window: int, poly: int, deriv: int = 0, dt: float = 1.0) -> np.ndarray:
@@ -83,7 +95,7 @@ def build_series(
     traces = {
         "hip_y": _joint_trace(df, HIPS, "y"),
         "hip_x": _joint_trace(df, HIPS, "x"),
-        "ankle_y": _joint_trace(df, ANKLES, "y"),
+        "ankle_y": _planted_ankle_trace(df, "y"),
         "wrist_y": _joint_trace(df, WRISTS, "y"),
         "eye_y": _joint_trace(df, EYES, "y"),
     }

@@ -111,10 +111,22 @@ model-download that could leave a broken file behind. ✅ Committed.
 **Phase 2 — find the jump and do the physics.** The core. Detects the crouch,
 takeoff, and landing moments, then computes the five metrics as pure math
 functions (each labeled with its units and the formula's origin). Backed by a
-suite of synthetic-jump tests. **43 tests pass.** ⚠️ The fresh-eyes review was
-*interrupted by an API usage limit* — only 1 of 4 reviewers finished. It found
-one minor issue (a misleading comment), now fixed. **The full Phase 2 review
-still needs to be re-run** once the limit resets.
+suite of synthetic-jump tests. **47 tests pass.**
+
+The fresh-eyes review (its first run was cut off by a usage limit, then re-run
+to completion) raised 12 possible issues; independent double-checking confirmed
+**3 real ones**, all now fixed:
+1. a jump cut off by the end of the video could be reported with a too-short
+   airtime instead of being ignored (would understate jump height);
+2. "ground level" was measured from the *average* of both ankles — wrong for a
+   running approach where one foot is always lifted; now uses the planted foot;
+3. a calibration test was quietly circular (would have passed even with a
+   mistyped body-proportion number); rewritten to actually catch that.
+The other 9 were false alarms or style nitpicks and were dismissed with reasons.
+
+**Housekeeping — removed the "Co-Authored-By: Claude" tag.** Turned it off for
+future commits (a one-line setting) and rewrote the 4 commits already on GitHub
+to strip it, so the history reads as fully yours.
 
 **A note on the real sample clip.** Your `demo.mov` is busy match footage with
 many players near the net, so the pose model sometimes locks onto the wrong

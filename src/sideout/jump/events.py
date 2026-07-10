@@ -101,11 +101,15 @@ def detect_jumps(series: JumpSeries, params: EventParams | None = None) -> list[
     for run_start, run_end in _contiguous_runs(airborne):
         # Refine boundaries outward from the coarse threshold to actual ground
         # contact, so flight time isn't clipped (see module docstring).
+        # Refinement must be able to REACH the array edges (indices 0 and
+        # len-1); otherwise the edge-rejection guard below can never fire for a
+        # jump whose takeoff/landing sits right at the clip boundary, and the
+        # flight time gets silently truncated.
         start_i = run_start
-        while start_i - 1 > 0 and off_ground[start_i - 1]:
+        while start_i - 1 >= 0 and off_ground[start_i - 1]:
             start_i -= 1
         end_i = run_end
-        while end_i + 1 < len(series) - 1 and off_ground[end_i + 1]:
+        while end_i + 1 < len(series) and off_ground[end_i + 1]:
             end_i += 1
 
         # Reject runs clipped by the video edges — takeoff/landing not observed.

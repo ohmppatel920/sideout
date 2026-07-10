@@ -18,8 +18,15 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-from sideout.jump.metrics import EYE_ANKLE_SPAN_RATIO, G_M_S2
+from sideout.jump.metrics import G_M_S2
 from sideout.pose.landmarks import N_LANDMARKS, Landmark
+
+# The eye→ankle standing span as a fraction of stature, stated INDEPENDENTLY of
+# the metrics module (Drillis & Contini 1966). Keeping this a separate literal
+# — not an import from metrics — is deliberate: it makes the fixture the
+# ground-truth physiology, so if the metrics constant ever drifts, the
+# calibration test fails instead of silently agreeing with the bug.
+TRUE_EYE_ANKLE_SPAN = 0.897
 
 KEYPOINT_COLUMNS = [
     "frame",
@@ -168,7 +175,7 @@ def synthetic_jump_df(
     # (Drillis & Contini), eye−ankle span = 0.897·H.
     hip_height_m = 0.530 * athlete_height_m
     standing_hip_y = ankle_baseline_y - hip_height_m / m_per_unit
-    eye_y_standing = ankle_baseline_y - EYE_ANKLE_SPAN_RATIO * athlete_height_m / m_per_unit
+    eye_y_standing = ankle_baseline_y - TRUE_EYE_ANKLE_SPAN * athlete_height_m / m_per_unit
 
     def active_spec(t: float) -> JumpSpec | None:
         for s in jumps:

@@ -4,8 +4,29 @@ import numpy as np
 import pytest
 
 from sideout.jump.events import detect_jumps
-from sideout.jump.series import build_series
+from sideout.jump.series import JumpSeries, build_series
+from sideout.pose.landmarks import Landmark
 from tests.fixtures import JumpSpec, synthetic_jump_df
+
+
+def _series_from_ankle(ankle_y, takeoff_i, dt=1 / 60.0):
+    """Hand-built JumpSeries: flat hips with a strong takeoff velocity peak, and
+    a caller-supplied ankle trace. Lets tests probe boundary logic directly."""
+    n = len(ankle_y)
+    hip_up_vel = np.zeros(n)
+    hip_up_vel[max(0, takeoff_i - 1) : takeoff_i + 2] = 1.0  # strong, valid takeoff
+    return JumpSeries(
+        t_s=np.arange(n) * dt,
+        dt_s=dt,
+        hip_y=np.full(n, 0.5),
+        hip_x=np.zeros(n),
+        ankle_y=np.asarray(ankle_y, dtype=float),
+        wrist_y=np.full(n, 0.45),
+        eye_y=np.full(n, 0.30),
+        hip_up_vel=hip_up_vel,
+        max_gap_s=0.0,
+    )
+
 
 # At 60 fps the grid step is ~16.7 ms; allow a little over one step for
 # boundary events, more for load_start (smoothing shifts gentle onsets).
@@ -90,7 +111,35 @@ class TestEdgeCases:
         assert detect(sj) == []
 
 
+class TestBoundaryRefinement:
+    """The edge-rejection guard must fire for jumps clipped by the video edge."""
+
+    def test_full_jump_within_clip_detected(self):
+        base = 0.80
+        ankle = [base] * 5 + [0.70] * 15 + [base] * 5  # airborne fully inside clip
+        events = detect_jumps(_series_from_ankle(ankle, takeoff_i=5))
+        assert len(events) == 1
+
+    def test_edge_clipped_landing_is_dropped(self):
+        # Airborne mid-clip, but the clip ends while the athlete is still just
+        # off the ground (last frame 0.783: past ground contact, below the
+        # airborne threshold). Landing is never observed → the jump must be
+        # dropped, not reported with a truncated flight time.
+        base = 0.80
+        ankle = [base] * 5 + [0.70] * 13 + [0.74, 0.783]
+        assert detect_jumps(_series_from_ankle(ankle, takeoff_i=5)) == []
+
+
 class TestSeries:
+    def test_series_ankle_tracks_planted_foot_not_mean(self):
+        # Lift one ankle every frame; the ground trace must follow the PLANTED
+        # (lower, max-image-y) foot, not the mean of the two.
+        sj = synthetic_jump_df(jumps=[])  # quiet standing, both feet on ground
+        df = sj.df.copy()
+        df.loc[df["landmark_id"] == int(Landmark.LEFT_ANKLE), "y"] -= 0.10
+        s = build_series(df)
+        assert s.ankle_y.mean() == pytest.approx(sj.ankle_baseline_y, abs=0.01)
+
     def test_series_uses_real_timestamps(self):
         sj = synthetic_jump_df(fps=48.0)  # not 30, not 60
         s = build_series(sj.df)

@@ -28,6 +28,9 @@ class TestJumpHeightFormula:
 
 class TestCalibration:
     def test_recovers_known_scale(self):
+        # The fixture builds its standing geometry from an INDEPENDENT 0.897
+        # literal (tests/fixtures.TRUE_EYE_ANKLE_SPAN), so this now also catches
+        # the metrics constant drifting away from the true body proportion.
         sj = synthetic_jump_df()
         m_per_unit = metrics.calibration_m_per_unit(
             eye_y_standing=sj.extra["eye_y_standing"],
@@ -35,6 +38,20 @@ class TestCalibration:
             height_m=sj.height_m_athlete,
         )
         assert m_per_unit == pytest.approx(sj.m_per_unit, rel=1e-6)
+
+    def test_recovers_scale_from_series_extracted_standing_pose(self):
+        # Exercises the REAL path: pull standing eye + ankle out of the built
+        # series (not fixture constants) and recover the scale. Guards the
+        # extraction path AND the anthropometric constant end to end.
+        sj = synthetic_jump_df()
+        s = build_series(sj.df)
+        i = int(np.searchsorted(s.t_s, 0.5))  # quiet standing, before the load
+        m_per_unit = metrics.calibration_m_per_unit(
+            eye_y_standing=float(s.eye_y[i]),
+            ankle_y_standing=float(s.ankle_y[i]),
+            height_m=sj.height_m_athlete,
+        )
+        assert m_per_unit == pytest.approx(sj.m_per_unit, rel=0.03)
 
     def test_inverted_coordinates_rejected(self):
         # Eyes below ankles in image coords = upside-down input.
