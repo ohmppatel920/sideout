@@ -8,7 +8,18 @@
 
 It grew out of scouting a D1AAA national-championship team by hand; sideOut automates that work.
 
-**▶ Live demo: [ohmppatel920.github.io/sideout](https://ohmppatel920.github.io/sideout/)** — a real approach analyzed in the browser (skeleton overlay, event flags, live metrics, charts). No install.
+**▶ Live demo: [ohmppatel920.github.io/sideout](https://ohmppatel920.github.io/sideout/)** — a real jump analyzed in the browser (skeleton overlay, event flags, live metrics, to-scale reach diagram). No install.
+
+---
+
+## Engineering highlights
+
+- **Correctness over coverage theatre** — 69 tests / 87% coverage that assert the metrics *recover ground truth* from synthetic fixtures with known answers, not just "it runs."
+- **Green CI on every push** — GitHub Actions runs `ruff`, `mypy`, and `pytest` (badge above).
+- **Typed and pure** — fully type-annotated; the physics lives in pure, side-effect-free functions, each documenting its units and formula derivation.
+- **Handles real-world input** — variable frame rate (uses true timestamps, never assumes fps), phone rotation metadata, and dropped frames.
+- **Reproducible + shippable** — `uv` lockfile, one-command Docker, and a live auto-deployed demo (GitHub Pages).
+- **Reviewed like real code** — each phase audited by a fresh-context reviewer that caught and fixed real bugs before merge.
 
 ---
 
