@@ -7,8 +7,12 @@ sideout jump report <run-dir>          (Phase 3)
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
+
+if TYPE_CHECKING:
+    from sideout.jump.analysis import SessionAnalysis
 
 app = typer.Typer(
     help="sideOut — local-first volleyball performance analysis.", no_args_is_help=True
@@ -30,8 +34,14 @@ def analyze(
         help="Athlete standing height in cm; enables meter-scaled metrics (Phase 2+).",
     ),
 ) -> None:
-    """Extract pose keypoints from VIDEO into a per-run parquet + summary."""
+    """Extract pose, detect jumps, and write metrics + charts + annotated video.
+
+    The one command: VIDEO in, a full run directory out.
+    """
+    from sideout.jump.analysis import analyze_run
+    from sideout.jump.report import render_report
     from sideout.pose.extractor import extract_keypoints, save_run, summarize_keypoints
+    from sideout.viz.overlay import render_overlay
 
     typer.echo(f"Analyzing {video} (model={model}) ...")
     df, meta = extract_keypoints(video, model_variant=model)
@@ -45,23 +55,51 @@ def analyze(
     typer.echo(f"  fps                : nominal {meta.nominal_fps:.2f} | {fps_str}")
     typer.echo(f"  timestamps         : {meta.timestamp_source}")
     typer.echo(f"  rotation metadata  : {meta.rotation_meta_deg:.0f}°")
-    typer.echo("  mean visibility    : ", nl=False)
     typer.echo(
-        f"ankles {summary['mean_visibility_ankles']:.2f} | "
+        f"  mean visibility    : ankles {summary['mean_visibility_ankles']:.2f} | "
         f"hips {summary['mean_visibility_hips']:.2f} | "
         f"wrists {summary['mean_visibility_wrists']:.2f}"
     )
-    if height_cm is not None:
-        typer.echo(f"  height calibration : {height_cm:.0f} cm (used by metrics in Phase 2)")
+
+    analysis = analyze_run(df, height_cm=height_cm)
+    render_report(analysis, run_dir)
+    overlay_path = render_overlay(meta.video_path, df, analysis.jumps, run_dir / "overlay.mp4")
+
+    _print_jump_summary(analysis, overlay_path, height_cm)
 
 
 @jump_app.command("report")
 def report(
     run_dir: Path = typer.Argument(..., help="A run directory from `sideout jump analyze`."),
+    height_cm: float | None = typer.Option(
+        None, "--height-cm", help="Athlete standing height in cm for meter-scaled metrics."
+    ),
 ) -> None:
-    """Regenerate charts + metrics JSON from a run's parquet (Phase 3)."""
-    typer.echo("`sideout jump report` arrives in Phase 3.")
-    raise typer.Exit(code=1)
+    """Regenerate metrics.json + charts from a run's parquet (no pose re-run)."""
+    from sideout.jump.report import write_report
+
+    written = write_report(run_dir, height_cm=height_cm)
+    typer.echo(f"Wrote {written['metrics']}")
+    for key in ("chart_heights", "chart_metrics_vs_height"):
+        if key in written:
+            typer.echo(f"Wrote {written[key]}")
+
+
+def _print_jump_summary(
+    analysis: SessionAnalysis, overlay_path: Path, height_cm: float | None
+) -> None:
+    """Human-readable summary of detected jumps after an analyze run."""
+    typer.echo(f"\n  jumps detected     : {analysis.n_jumps}")
+    for j in analysis.jumps:
+        parts = [f"#{j.index + 1}", f"height {j.jump_height_m:.2f} m"]
+        if j.countermovement_depth_m is not None:
+            parts.append(f"depth {j.countermovement_depth_m:.2f} m")
+        if j.approach_velocity_m_s is not None:
+            parts.append(f"approach {j.approach_velocity_m_s:.1f} m/s")
+        typer.echo("    " + " | ".join(parts))
+    if analysis.n_jumps and not analysis.calibrated:
+        typer.echo("  (pass --height-cm for depth in meters and approach velocity)")
+    typer.echo(f"  overlay video      : {overlay_path}")
 
 
 if __name__ == "__main__":

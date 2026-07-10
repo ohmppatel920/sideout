@@ -1,0 +1,1 @@
+"""Visualization: annotated output video."""

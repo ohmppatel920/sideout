@@ -190,6 +190,10 @@ class TestCli:
         meta = TestSaveRun()._meta(video="demo.mov")
 
         monkeypatch.setattr("sideout.pose.extractor.extract_keypoints", lambda *a, **k: (df, meta))
+        # Stub the video render so the CLI path is exercised without real video I/O.
+        monkeypatch.setattr(
+            "sideout.viz.overlay.render_overlay", lambda *a, **k: tmp_path / "overlay.mp4"
+        )
         video = tmp_path / "demo.mov"
         video.write_bytes(b"\x00")
         result = CliRunner().invoke(
@@ -200,3 +204,4 @@ class TestCli:
         assert "container" in result.output
         # Summary keys must resolve — a renamed key would KeyError here.
         assert "ankles" in result.output and "wrists" in result.output
+        assert "jumps detected" in result.output  # Phase 3: analysis summary printed
