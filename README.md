@@ -8,7 +8,7 @@
 
 It grew out of scouting a D1AAA national-championship team by hand; sideOut automates that work.
 
-> _Demo GIF placeholder — a clean single-athlete clip with skeleton overlay, event flags, and live metrics. (Coming in the demo phase.)_
+**▶ Live demo: [ohmppatel920.github.io/sideout](https://ohmppatel920.github.io/sideout/)** — a real approach analyzed in the browser (skeleton overlay, event flags, live metrics, charts). No install.
 
 ---
 

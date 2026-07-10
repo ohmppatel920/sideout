@@ -177,15 +177,21 @@ from a small reproducible script, not hand-waving. The honest headline: the
 biggest real-world error isn't the physics — it's the pose model tracking the
 wrong player in a crowd. **66 tests pass.**
 
-**Phase 6 — the recruiter link (in progress, needs your input).** Built the
-demo *generator*: `demo/build_demo.py` turns any completed run into a polished,
-self-contained web page (annotated video + metric cards + charts, works with no
-server). Verified it assembles correctly. **But it's blocked on a real problem:**
-the only sample clip is crowded match footage where the pose model tracks the
-wrong player, so publishing that demo would look broken. This needs a decision —
-a clean single-athlete clip is the simplest fix. (Per the project's own rule:
-when a phase hits a blocker, stop and present options rather than ship something
-misleading.)
+**Phase 6 — the recruiter link (live, awaiting the real clip).** Built the demo
+*generator* (`demo/build_demo.py`): it turns any completed run into a polished,
+self-contained web page (annotated video + metric cards + charts, no server
+needed). **Hosting is live now** at
+[ohmppatel920.github.io/sideout](https://ohmppatel920.github.io/sideout/) —
+GitHub Pages auto-deploys the `demo/` folder on every change. For now it shows a
+tasteful "coming soon" placeholder.
+
+Why a placeholder and not the real thing yet: the only clip we have is crowded
+match footage where the pose model tracks the *wrong* player, which would make a
+misleading showcase. The plan (agreed): you film a **clean single-athlete clip**,
+then publishing is literally three commands (see [`demo/README.md`](../demo/README.md)).
+The one video the repo now allows committing is the *rendered* demo overlay — a
+deliberate, narrow exception to the never-commit-video rule, just for the
+published page.
 
 ## Mini-glossary
 
