@@ -67,11 +67,16 @@ class SessionAnalysis:
 
 
 def _standing_eye_ankle(series: JumpSeries, before_s: float) -> tuple[float, float]:
-    """Median standing eye_y and ankle_y over the quiet frames before ``before_s``
-    (falls back to the first quarter of the clip if that window is empty)."""
-    mask = series.t_s <= before_s
+    """Median standing eye_y and ankle_y over the quiet start of the clip.
+
+    Uses the earliest ~0.5 s (before the approach pitches the torso forward and
+    compresses the eye→ankle span), and never looks past ``before_s`` (the
+    first jump's load). Falls back to the first frame if that window is empty.
+    """
+    end = min(before_s, float(series.t_s[0]) + 0.5)
+    mask = series.t_s <= end
     if mask.sum() < 1:
-        mask = series.t_s <= series.t_s[len(series) // 4]
+        mask = series.t_s <= series.t_s[0]
     return float(np.median(series.eye_y[mask])), float(np.median(series.ankle_y[mask]))
 
 
@@ -82,21 +87,22 @@ def _metrics_for_jump(
     flight = ev.flight_time_s
     height_m = metrics.jump_height_m(flight)
 
-    # Reference time for "standing" and the approach plant. When no clear
-    # countermovement was found, fall back to takeoff.
+    # Countermovement depth and loading time exist only when a load phase was
+    # detected. Without one (e.g. a block jump straight out of the approach)
+    # they are undefined — leave them None rather than fabricating a value.
+    depth_norm: float | None = None
+    depth_m: float | None = None
+    loading: float | None = None
+    if ev.load_start_s is not None:
+        standing = metrics.standing_hip_y(series.hip_y, series.t_s, before_s=ev.load_start_s)
+        depth_norm = metrics.countermovement_depth_norm(
+            series.hip_y, series.t_s, ev.load_start_s, ev.takeoff_s, standing
+        )
+        depth_m = metrics.countermovement_depth_m(depth_norm, m_per_unit) if m_per_unit else None
+        loading = metrics.loading_time_s(ev.load_start_s, ev.takeoff_s)
+
+    # Approach velocity is measured up to the plant; use load_start, else takeoff.
     plant_s = ev.load_start_s if ev.load_start_s is not None else ev.takeoff_s
-
-    standing = metrics.standing_hip_y(series.hip_y, series.t_s, before_s=plant_s)
-    depth_norm = metrics.countermovement_depth_norm(
-        series.hip_y, series.t_s, plant_s, ev.takeoff_s, standing
-    )
-    depth_m = metrics.countermovement_depth_m(depth_norm, m_per_unit) if m_per_unit else None
-
-    loading = (
-        metrics.loading_time_s(ev.load_start_s, ev.takeoff_s)
-        if ev.load_start_s is not None
-        else None
-    )
     arm = metrics.arm_swing_timing_s(series.wrist_y, series.t_s, ev.takeoff_s)
     approach_v = (
         metrics.approach_velocity_m_s(series.hip_x, series.t_s, plant_s, m_per_unit)
@@ -110,7 +116,7 @@ def _metrics_for_jump(
         landing_s=round(ev.landing_s, 4),
         flight_time_s=round(flight, 4),
         jump_height_m=round(height_m, 4),
-        countermovement_depth_norm=round(depth_norm, 5),
+        countermovement_depth_norm=round(depth_norm, 5) if depth_norm is not None else None,
         countermovement_depth_m=round(depth_m, 4) if depth_m is not None else None,
         loading_time_s=round(loading, 4) if loading is not None else None,
         approach_velocity_m_s=round(approach_v, 3) if approach_v is not None else None,

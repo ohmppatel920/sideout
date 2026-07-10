@@ -2,8 +2,30 @@
 
 import pytest
 
-from sideout.jump.analysis import analyze_run
+from sideout.jump.analysis import _metrics_for_jump, analyze_run
+from sideout.jump.events import JumpEvent
+from sideout.jump.series import build_series
 from tests.fixtures import JumpSpec, synthetic_jump_df
+
+
+class TestNoCountermovement:
+    def test_jump_without_load_start_does_not_crash(self):
+        # A detected jump with no clear countermovement (load_start_s is None) —
+        # e.g. a block jump. Depth and loading are undefined (None), but the
+        # rest must still compute and the command must not crash.
+        sj = synthetic_jump_df()
+        s = build_series(sj.df)
+        ev = JumpEvent(
+            load_start_s=None,
+            takeoff_s=float(s.t_s[10]) + s.dt_s / 2,  # between-frame midpoint
+            landing_s=float(s.t_s[40]) + s.dt_s / 2,
+        )
+        m = _metrics_for_jump(s, ev, index=0, m_per_unit=2.5)
+        assert m.loading_time_s is None
+        assert m.countermovement_depth_norm is None
+        assert m.countermovement_depth_m is None
+        assert m.jump_height_m > 0  # flight-time height still computed
+        assert m.arm_swing_timing_s is not None
 
 
 class TestCalibratedSingleJump:

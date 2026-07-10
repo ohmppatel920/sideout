@@ -108,26 +108,31 @@ def render_overlay(
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         raise RuntimeError(f"OpenCV could not open video: {video_path}")
-    cap.set(cv2.CAP_PROP_ORIENTATION_AUTO, 1)  # match Phase 1 frame orientation
 
-    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = float(cap.get(cv2.CAP_PROP_FPS)) or 30.0
-
-    frame_t_ms = df.groupby("frame")["t_ms"].first().to_numpy(dtype=float)
-    flags = _flags_by_frame(jumps, frame_t_ms)
-    flag_hold_frames = max(1, int(round(_FLAG_HOLD_S * fps)))
-    # Which jump's readout to show at each frame (its landing onward).
-    landing_frame = {time_to_frame(j.landing_s, frame_t_ms): j for j in jumps}
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fourcc = cv2.VideoWriter.fourcc(*"mp4v")
-    writer = cv2.VideoWriter(str(out_path), fourcc, fps, (w, h))
-
+    writer: cv2.VideoWriter | None = None
     active_flag: tuple[str, int] | None = None  # (label, frames_remaining)
     current_readout: JumpMetrics | None = None
     frame_idx = 0
     try:
+        cap.set(cv2.CAP_PROP_ORIENTATION_AUTO, 1)  # match Phase 1 frame orientation
+        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = float(cap.get(cv2.CAP_PROP_FPS)) or 30.0
+
+        frame_t_ms = df.groupby("frame")["t_ms"].first().to_numpy(dtype=float)
+        flags = _flags_by_frame(jumps, frame_t_ms)
+        flag_hold_frames = max(1, int(round(_FLAG_HOLD_S * fps)))
+        # Which jump's readout to show at each frame (its landing onward).
+        landing_frame = {time_to_frame(j.landing_s, frame_t_ms): j for j in jumps}
+
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        writer = cv2.VideoWriter(str(out_path), cv2.VideoWriter.fourcc(*"mp4v"), fps, (w, h))
+        if not writer.isOpened():
+            raise RuntimeError(
+                f"OpenCV could not open a video writer for {out_path} "
+                "(is the mp4v codec available?)"
+            )
+
         while True:
             ok, frame = cap.read()
             if not ok:
@@ -152,7 +157,8 @@ def render_overlay(
             frame_idx += 1
     finally:
         cap.release()
-        writer.release()
+        if writer is not None:
+            writer.release()
     return out_path
 
 

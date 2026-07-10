@@ -124,6 +124,23 @@ to completion) raised 12 possible issues; independent double-checking confirmed
    mistyped body-proportion number); rewritten to actually catch that.
 The other 9 were false alarms or style nitpicks and were dismissed with reasons.
 
+**Phase 3 — turn jumps into outputs.** One command (`sideout jump analyze`)
+now takes the video all the way to: a `metrics.json` (every jump's numbers +
+session summary), two charts (a bar of jump heights, and each metric plotted
+against height), and an **annotated video** — the skeleton drawn on the
+athlete, LOAD/TAKEOFF/LANDING banners at the right moments, and a metric readout
+after each jump. A second command (`sideout jump report`) regenerates the JSON
+and charts from saved data without re-running the slow pose step. Confirmed on
+your real clip: the banners, readout, and skeleton all render (though on that
+crowded clip the pose model tracks the wrong player — the clean-clip caveat).
+
+The fresh-eyes review caught **1 real crash**: a jump with no clear crouch
+(e.g. a block jump) would abort the whole command; now those jumps just report
+their depth/loading as "not available" and everything else still computes.
+Plus three small robustness fixes (fail loudly if the video can't be written,
+tighter standing-pose window for the height calibration, no resource leaks).
+**63 tests pass.**
+
 **Housekeeping — removed the "Co-Authored-By: Claude" tag.** Turned it off for
 future commits (a one-line setting) and rewrote the 4 commits already on GitHub
 to strip it, so the history reads as fully yours.
