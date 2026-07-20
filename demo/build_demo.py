@@ -10,6 +10,11 @@ works from `file://` and from GitHub Pages with no server, no fetch, no build.
 
 The page is a *replay* of pipeline outputs — it contains zero physics logic.
 The Python pipeline stays the single source of truth.
+
+Design language ("court graphic"): FIVB court orange + white court lines +
+sport-hall teal; Barlow Condensed for scoreboard/jersey display type; the
+red/white net antenna as the section marker. One bold moment — the full-bleed
+court panel holding the reach diagram — and quiet hairline structure elsewhere.
 """
 
 from __future__ import annotations
@@ -41,7 +46,9 @@ def _build_gif(overlay_mp4: Path, out_gif: Path, max_width: int = 360, stride: i
             break
         if idx % stride == 0:
             h, w = bgr.shape[:2]
-            small = cv2.resize(bgr, (max_width, int(h * max_width / w)), interpolation=cv2.INTER_AREA)
+            small = cv2.resize(
+                bgr, (max_width, int(h * max_width / w)), interpolation=cv2.INTER_AREA
+            )
             rgb = cv2.cvtColor(small, cv2.COLOR_BGR2RGB)
             frames.append(Image.fromarray(rgb).convert("P", palette=Image.ADAPTIVE))
         idx += 1
@@ -49,18 +56,42 @@ def _build_gif(overlay_mp4: Path, out_gif: Path, max_width: int = 360, stride: i
     if not frames:
         return False
     frames[0].save(
-        out_gif, save_all=True, append_images=frames[1:], loop=0,
-        duration=int(stride * 1000 / fps), optimize=True, disposal=2,
+        out_gif,
+        save_all=True,
+        append_images=frames[1:],
+        loop=0,
+        duration=int(stride * 1000 / fps),
+        optimize=True,
+        disposal=2,
     )
     return True
+
+
+def _antenna_svg(x: float, net_y: float) -> str:
+    """A small red/white striped net antenna rising from the net line.
+
+    Real antennas mark the vertical boundary of legal play in ~10 cm red/white
+    bands; here one sits on the drawn net line as a quiet, true-to-sport detail.
+    """
+    stripes = []
+    for i in range(5):  # bottom stripe red, alternating upward
+        fill = "#C8102E" if i % 2 == 0 else "#FFFFFF"
+        stripes.append(
+            f'<rect x="{x}" y="{round(net_y - 5 * (i + 1), 1)}" width="6" height="5" fill="{fill}"/>'
+        )
+    stripes.append(
+        f'<rect x="{x}" y="{round(net_y - 25, 1)}" width="6" height="25" fill="none" '
+        f'stroke="rgba(20,20,20,.3)" stroke-width="1"/>'
+    )
+    return "".join(stripes)
 
 
 def _reach_diagram(jump: dict) -> str:
     """SVG: the athlete's reach drawn to scale against the net — the signature.
 
-    Only rendered when touch height is available (needs --reach-cm). Shows
-    standing reach, the men's net line, and touch height at the apex, so the
-    jump reads as 'clears the net by N cm'.
+    Only rendered when touch height is available (needs --reach-cm). Drawn for
+    the court panel: white court lines and type on court orange, the jump
+    segment in ink on the white reach column, an antenna on the net line.
     """
     touch = jump.get("touch_height_m")
     if touch is None:
@@ -69,7 +100,7 @@ def _reach_diagram(jump: dict) -> str:
     jump_m = jump["jump_height_m"]
 
     max_m = max(3.2, touch + 0.25)
-    top, bottom, h = 26, 34, 340
+    top, bottom, h = 30, 34, 340
     inner = h - top - bottom
 
     def y(m: float) -> float:
@@ -77,40 +108,54 @@ def _reach_diagram(jump: dict) -> str:
 
     bar_x, bar_w = 108, 46
     ground = y(0)
+    net_y = y(MENS_NET_M)
     parts = [f'<svg viewBox="0 0 360 {h}" role="img" aria-label="Reach to scale versus the net">']
 
-    # y-axis ticks (metres)
+    # metre lines — the court's own line language (ground line solid, rest faint)
     for m in range(0, int(max_m) + 1):
         yy = y(m)
-        parts.append(f'<line class="grid" x1="52" y1="{yy}" x2="330" y2="{yy}"/>')
+        cls = "ground" if m == 0 else "grid"
+        parts.append(f'<line class="{cls}" x1="52" y1="{yy}" x2="330" y2="{yy}"/>')
         parts.append(f'<text class="tick" x="44" y="{yy + 4}" text-anchor="end">{m} m</text>')
 
-    # reach column: ground→standing-reach (base), standing-reach→touch (the jump)
+    # reach column: ground→standing-reach (white), standing-reach→touch (ink = the jump)
     parts.append(
         f'<rect class="bar-base rise" x="{bar_x}" y="{y(reach)}" width="{bar_w}" '
-        f'height="{round(ground - y(reach), 1)}" rx="3"/>'
+        f'height="{round(ground - y(reach), 1)}" rx="2"/>'
     )
     parts.append(
         f'<rect class="bar-jump rise" x="{bar_x}" y="{y(touch)}" width="{bar_w}" '
-        f'height="{round(y(reach) - y(touch), 1)}" rx="3"/>'
+        f'height="{round(y(reach) - y(touch), 1)}" rx="2"/>'
     )
 
-    # net reference line — label sits ABOVE the line (far right) and the
-    # standing-reach marker BELOW it, so the dashed line runs cleanly between
-    # them even when reach ≈ net height (as it does for tall athletes).
-    parts.append(f'<line class="net" x1="52" y1="{y(MENS_NET_M)}" x2="330" y2="{y(MENS_NET_M)}"/>')
-    parts.append(f'<text class="net-lbl" x="326" y="{y(MENS_NET_M) - 7}" text-anchor="end">men\'s net {MENS_NET_M:.2f} m</text>')
+    # net reference line, antenna at its left end; label ABOVE the line (far
+    # right) and the standing-reach marker BELOW it, so the line runs cleanly
+    # between them even when reach ≈ net height (as it does for tall athletes).
+    parts.append(f'<line class="net" x1="52" y1="{net_y}" x2="330" y2="{net_y}"/>')
+    parts.append(_antenna_svg(56, net_y))
+    parts.append(
+        f'<text class="net-lbl" x="326" y="{net_y - 7}" text-anchor="end">men\'s net {MENS_NET_M:.2f} m</text>'
+    )
 
     # markers
     lx = bar_x + bar_w + 12
-    parts.append(f'<text class="mk-touch" x="{lx}" y="{y(touch) + 4}">▸ touch {touch:.2f} m</text>')
-    parts.append(f'<text class="mk-reach" x="{lx}" y="{y(reach) + 17}">▸ standing reach {reach:.2f} m</text>')
+    parts.append(f'<text class="mk-touch" x="{lx}" y="{y(touch) + 4}">touch {touch:.2f} m</text>')
+    parts.append(
+        f'<text class="mk-reach" x="{lx}" y="{y(reach) + 17}">standing reach {reach:.2f} m</text>'
+    )
 
     over = touch - MENS_NET_M
-    parts.append(f'<text class="mk-gain" x="{bar_x + bar_w / 2}" y="{y(touch) - 10}" text-anchor="middle">+{jump_m:.2f} m</text>')
+    parts.append(
+        f'<text class="mk-gain" x="{bar_x + bar_w / 2}" y="{y(touch) - 10}" text-anchor="middle">+{jump_m:.2f} m</text>'
+    )
     parts.append("</svg>")
     caption = f"Flat-footed you reach the net; at the top of your jump you clear it by {over * 100:.0f} cm."
-    return f'<div class="reach">{"".join(parts)}</div><p class="reach-cap">{caption}</p>'
+    side = (
+        f'<div class="reach-side"><div class="big-stat"><span class="bs-n">{touch:.2f}</span>'
+        f'<span class="bs-u">m</span></div><div class="bs-l">touch height</div>'
+        f'<p class="reach-cap">{caption}</p></div>'
+    )
+    return f'<div class="reach">{"".join(parts)}</div>{side}'
 
 
 _READOUT = [
@@ -141,102 +186,138 @@ HTML = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>sideOut — Jump Lab</title>
 <meta name="description" content="Local-first volleyball jump analysis from a single side-view phone video.">
+<meta name="theme-color" content="#D14A24">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#e9edf1; --panel:#f7f9fb; --ink:#0f1720; --muted:#5a6b78; --line:#cdd6de;
-    --accent:#123a8b; --accent-soft:#3b62b8; --signal:#e0532b; --turf:#2c7d59;
+    --court:#D14A24; --court-deep:#B03D1E; --teal:#0E6672; --ink:#16232B;
+    --paper:#FBFBF8; --panel:#F1F2ED; --line:rgba(22,35,43,.16); --muted:#5C6A72;
   }
   * { box-sizing:border-box; }
   html { scroll-behavior:smooth; }
-  body { margin:0; background:var(--bg); color:var(--ink);
-         font-family:"Space Grotesk",-apple-system,Segoe UI,Roboto,sans-serif; line-height:1.55; }
-  .mono { font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace; }
-  a { color:var(--accent); text-decoration:none; }
+  body { margin:0; background:var(--paper); color:var(--ink);
+         font-family:"Barlow",-apple-system,Segoe UI,Roboto,sans-serif; line-height:1.55; }
+  .disp { font-family:"Barlow Condensed","Barlow",sans-serif; }
+  .mono { font-family:"Spline Sans Mono",ui-monospace,SFMono-Regular,Menlo,monospace; }
+  a { color:var(--teal); text-decoration:none; }
   a:hover { text-decoration:underline; }
-  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  :focus-visible { outline:2px solid var(--court); outline-offset:2px; }
 
-  .wrap { max-width:1000px; margin:0 auto; padding:0 1.25rem; }
-  nav { display:flex; align-items:center; justify-content:space-between; padding:1.1rem 0;
+  .wrap { max-width:1020px; margin:0 auto; padding:0 1.25rem; }
+  nav { display:flex; align-items:center; justify-content:space-between; padding:1.05rem 0;
         border-bottom:1px solid var(--line); }
-  .brand { font-weight:700; letter-spacing:-.02em; font-size:1.15rem; }
-  .brand b { color:var(--accent); }
-  .brand .lab { font-size:.62rem; letter-spacing:.16em; text-transform:uppercase;
-                color:var(--muted); border:1px solid var(--line); border-radius:999px;
-                padding:.12rem .5rem; margin-left:.5rem; vertical-align:middle; }
-  nav .links { display:flex; gap:1.25rem; font-size:.9rem; }
+  .brand { font-family:"Barlow Condensed",sans-serif; font-weight:700; font-size:1.45rem;
+           letter-spacing:.01em; color:var(--ink); }
+  .brand b { color:var(--court); font-weight:700; }
+  .brand .lab { display:inline-block; font-size:.66rem; font-weight:600; letter-spacing:.14em;
+                text-transform:uppercase; color:var(--paper); background:var(--ink);
+                border-radius:1px; padding:.2rem .5rem .16rem; margin-left:.6rem;
+                transform:translateY(-3px); }
+  nav .links { display:flex; gap:1.3rem; font-size:.93rem; font-weight:500; }
+  nav .links a { color:var(--ink); }
+  nav .links a:hover { color:var(--court); text-decoration:none; }
 
-  .eyebrow { font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.18em;
-             text-transform:uppercase; color:var(--turf); }
-  h1 { font-size:clamp(2.1rem,5vw,3.2rem); line-height:1.04; letter-spacing:-.03em;
-       margin:.5rem 0 .6rem; }
-  h1 em { font-style:normal; color:var(--accent); }
-  .lede { color:var(--muted); font-size:1.06rem; max-width:34ch; }
+  .tape { width:46px; height:5px; background:var(--court); margin-bottom:1.1rem; }
+  h1 { font-family:"Barlow Condensed",sans-serif; font-weight:700; text-transform:uppercase;
+       font-size:clamp(2.9rem,6.5vw,4.4rem); line-height:.95; letter-spacing:.004em;
+       margin:0 0 .9rem; }
+  h1 em { font-style:normal; color:var(--court); }
+  .lede { color:#46545C; font-size:1.08rem; max-width:36ch; margin:0; }
 
-  .hero { display:grid; grid-template-columns:1.05fr .95fr; gap:2.5rem; align-items:center;
-          padding:3.2rem 0 2.4rem; }
-  .hero .cta { display:flex; gap:.7rem; margin-top:1.4rem; flex-wrap:wrap; }
-  .btn { font-size:.9rem; font-weight:500; padding:.6rem 1rem; border-radius:8px;
-         border:1px solid var(--accent); }
-  .btn.solid { background:var(--accent); color:#fff; }
-  .btn.solid:hover { background:var(--accent-soft); text-decoration:none; }
-  .btn.ghost { color:var(--accent); }
-  .clip { width:100%; max-height:74vh; display:block; margin:0 auto; border-radius:12px;
-          border:1px solid var(--line); background:#0f1720; box-shadow:0 12px 30px rgba(15,23,32,.12); }
-  .clip-cap { text-align:center; color:var(--muted); font-size:.82rem; margin:.6rem 0 0; }
+  .hero { display:grid; grid-template-columns:1.05fr .95fr; gap:3rem; align-items:center;
+          padding:3.4rem 0 2.8rem; }
+  .hero .cta { display:flex; gap:.7rem; margin-top:1.5rem; flex-wrap:wrap; }
+  .btn { font-size:.95rem; font-weight:600; padding:.66rem 1.15rem; border-radius:3px;
+         border:1.5px solid transparent; }
+  .btn.solid { background:var(--court); color:#fff; }
+  .btn.solid:hover { background:var(--court-deep); text-decoration:none; }
+  .btn.ghost { border-color:var(--ink); color:var(--ink); }
+  .btn.ghost:hover { background:var(--ink); color:var(--paper); text-decoration:none; }
+  .facts { font-family:"Spline Sans Mono",monospace; font-size:.78rem; color:var(--muted);
+           margin-top:1.35rem; }
 
-  section { padding:2.6rem 0; border-top:1px solid var(--line); }
-  .sec-head { display:flex; align-items:baseline; gap:.8rem; margin-bottom:1.4rem; }
-  .sec-head h2 { font-size:1.25rem; letter-spacing:-.01em; margin:0; }
-  .sec-head .n { font-family:"IBM Plex Mono",monospace; color:var(--muted); font-size:.8rem; }
+  .clip { width:100%; max-height:70vh; display:block; margin:0 auto;
+          border:1px solid var(--line); border-bottom:none; border-radius:4px 4px 0 0;
+          background:#101820; }
+  .clip-strip { display:flex; justify-content:space-between; gap:1rem; background:var(--ink);
+                color:#fff; font-family:"Spline Sans Mono",monospace; font-size:.72rem;
+                letter-spacing:.05em; padding:.52rem .8rem; border-radius:0 0 4px 4px; }
 
-  /* signature: reach-to-scale */
-  .signature { display:grid; grid-template-columns:340px 1fr; gap:2rem; align-items:center; }
+  section { padding:3rem 0; }
+  .wrap > section { border-top:1px solid var(--line); }
+  .sec-head { display:flex; align-items:center; gap:.68rem; margin-bottom:1.6rem; }
+  .ant { width:6px; height:22px; flex:none; border-radius:2px 2px 0 0;
+         background:repeating-linear-gradient(180deg,#C8102E 0 5px,#fff 5px 10px);
+         box-shadow:inset 0 0 0 1px rgba(22,35,43,.22); }
+  h2 { font-family:"Barlow Condensed",sans-serif; font-weight:700; text-transform:uppercase;
+       font-size:1.18rem; letter-spacing:.07em; margin:0; }
+  .sec-meta { margin-left:auto; font-family:"Spline Sans Mono",monospace; font-size:.72rem;
+              letter-spacing:.05em; color:var(--muted); text-transform:uppercase; }
+
+  /* signature: the court panel */
+  .court-band { background:var(--court); color:#fff; }
+  .court-band .sec-head { margin-bottom:1.2rem; }
+  .court-band h2 { color:#fff; }
+  .court-band .ant { box-shadow:inset 0 0 0 1px rgba(22,35,43,.35); }
+  .signature { display:grid; grid-template-columns:minmax(300px,400px) 1fr; gap:3rem;
+               align-items:center; }
   .reach svg { width:100%; height:auto; }
-  .reach .grid { stroke:var(--line); stroke-width:1; }
-  .reach .tick { fill:var(--muted); font:500 11px "IBM Plex Mono",monospace; }
-  .reach .net { stroke:var(--ink); stroke-width:1.5; stroke-dasharray:5 4; }
-  .reach .net-lbl { fill:var(--ink); font:500 10px "IBM Plex Mono",monospace; }
-  .reach .bar-base { fill:var(--accent); }
-  .reach .bar-jump { fill:var(--signal); }
-  .reach .mk-touch { fill:var(--signal); font:700 13px "Space Grotesk",sans-serif; }
-  .reach .mk-reach { fill:var(--accent); font:500 12px "Space Grotesk",sans-serif; }
-  .reach .mk-gain { fill:var(--signal); font:700 12px "IBM Plex Mono",monospace; }
-  .reach-cap { color:var(--muted); font-size:.92rem; }
+  .reach .grid { stroke:rgba(255,255,255,.42); stroke-width:1; }
+  .reach .ground { stroke:#fff; stroke-width:2; }
+  .reach .tick { fill:#fff; font:500 11.5px "Spline Sans Mono",monospace; }
+  .reach .net { stroke:#fff; stroke-width:2.5; stroke-dasharray:7 5; }
+  .reach .net-lbl { fill:#fff; font:600 12px "Barlow Condensed",sans-serif; letter-spacing:.04em; }
+  .reach .bar-base { fill:#fff; }
+  .reach .bar-jump { fill:var(--ink); }
+  .reach .mk-touch { fill:#fff; font:700 15px "Barlow Condensed",sans-serif; letter-spacing:.02em; }
+  .reach .mk-reach { fill:#fff; font:500 13px "Barlow",sans-serif; }
+  .reach .mk-gain { fill:#fff; font:700 17px "Barlow Condensed",sans-serif; }
+  .reach-cap { color:#fff; font-size:1.02rem; font-weight:500; max-width:30ch;
+               line-height:1.5; margin:0; }
+  .reach-side .big-stat { display:flex; align-items:baseline; gap:.45rem; }
+  .bs-n { font-family:"Barlow Condensed",sans-serif; font-weight:700; font-size:4.8rem;
+          line-height:1; color:#fff; font-variant-numeric:tabular-nums; }
+  .bs-u { font-family:"Barlow Condensed",sans-serif; font-weight:600; font-size:1.6rem; color:#fff; }
+  .bs-l { font-family:"Spline Sans Mono",monospace; font-size:.75rem; letter-spacing:.14em;
+          text-transform:uppercase; color:#fff; margin:.25rem 0 1.1rem; }
   .rise { transform-box:fill-box; transform-origin:bottom; animation:rise .9s cubic-bezier(.2,.7,.2,1) both; }
   @keyframes rise { from { transform:scaleY(0); } to { transform:scaleY(1); } }
 
-  /* metric readout */
-  .readout { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
-  .readout .row { display:flex; justify-content:space-between; align-items:baseline;
-                  padding:.85rem 1.2rem; border-top:1px solid var(--line); }
-  .readout .row:first-child { border-top:none; }
-  .rl { color:var(--muted); font-size:.92rem; }
-  .rv { font-family:"IBM Plex Mono",monospace; font-size:1.5rem; font-weight:500; }
-  .ru { color:var(--muted); font-size:.8rem; margin-left:.3rem; }
+  /* the box score */
+  .score { border-top:2.5px solid var(--ink); }
+  .score .row { display:flex; justify-content:space-between; align-items:baseline;
+                padding:.88rem .1rem; border-bottom:1px solid var(--line); }
+  .rl { font-weight:500; font-size:.97rem; color:#3E4C55; }
+  .rv { font-family:"Barlow Condensed",sans-serif; font-weight:700; font-size:1.75rem;
+        font-variant-numeric:tabular-nums; }
+  .ru { font-family:"Spline Sans Mono",monospace; font-size:.74rem; font-weight:400;
+        color:var(--muted); margin-left:.35rem; }
 
-  /* pipeline */
-  .pipe { display:grid; grid-template-columns:repeat(4,1fr); gap:.6rem; }
-  .step { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem; }
-  .step .k { font-family:"IBM Plex Mono",monospace; color:var(--turf); font-size:.72rem; }
-  .step h3 { font-size:.98rem; margin:.35rem 0 .3rem; }
-  .step p { color:var(--muted); font-size:.84rem; margin:0; }
+  /* pipeline — a true sequence, so it keeps its numbers */
+  .pipe { display:grid; grid-template-columns:repeat(4,1fr); gap:1.4rem; }
+  .step { border-top:2.5px solid var(--ink); padding-top:.75rem; }
+  .step .k { font-family:"Spline Sans Mono",monospace; color:var(--court); font-size:.72rem;
+             letter-spacing:.07em; text-transform:uppercase; }
+  .step h3 { font-size:1rem; font-weight:600; margin:.3rem 0 .25rem; }
+  .step p { color:var(--muted); font-size:.86rem; margin:0; }
 
   /* engineering highlights */
   .eng { display:grid; grid-template-columns:1fr 1fr; gap:.7rem 2rem; }
-  .eng div { display:flex; gap:.6rem; font-size:.92rem; padding:.15rem 0; }
-  .eng .c { color:var(--turf); font-family:"IBM Plex Mono",monospace; }
-  .stack { display:flex; flex-wrap:wrap; gap:.45rem; margin-top:1.4rem; }
-  .chip { font-family:"IBM Plex Mono",monospace; font-size:.76rem; color:var(--muted);
-          border:1px solid var(--line); border-radius:6px; padding:.25rem .55rem; background:var(--panel); }
+  .eng div { display:flex; gap:.6rem; font-size:.93rem; padding:.15rem 0; }
+  .eng .c { color:var(--teal); font-family:"Spline Sans Mono",monospace; }
+  .stack { font-family:"Spline Sans Mono",monospace; font-size:.78rem; color:var(--muted);
+           margin-top:1.5rem; line-height:1.9; }
 
-  footer { border-top:1px solid var(--line); padding:1.6rem 0 3rem; color:var(--muted);
-           font-size:.85rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:.6rem; }
+  footer { border-top:1px solid var(--line); padding:1.8rem 0 3.2rem; color:var(--muted);
+           font-size:.87rem; display:flex; justify-content:space-between; flex-wrap:wrap;
+           gap:.6rem 2rem; }
+  footer .who { max-width:60ch; }
 
   @media (max-width:760px) {
-    .hero, .signature { grid-template-columns:1fr; }
+    .hero { grid-template-columns:1fr; gap:2rem; padding-top:2.4rem; }
+    .signature { grid-template-columns:1fr; gap:1.8rem; }
     .pipe { grid-template-columns:1fr 1fr; }
     .eng { grid-template-columns:1fr; }
     nav .links a:nth-child(1) { display:none; }
@@ -257,7 +338,7 @@ HTML = """<!doctype html>
 
   <header class="hero">
     <div>
-      <div class="eyebrow">open-source · local-first · no cloud</div>
+      <div class="tape"></div>
       <h1>See the jump<br>in the <em>numbers.</em></h1>
       <p class="lede">sideOut turns one side-view phone video into a full biomechanical
       readout — height, reach, timing — on your own machine.</p>
@@ -265,39 +346,44 @@ HTML = """<!doctype html>
         <a class="btn solid" href="https://github.com/ohmppatel920/sideout">View source</a>
         <a class="btn ghost" href="#how">How it works</a>
       </div>
+      <p class="facts">runs on your laptop · no cloud · no account · open source</p>
     </div>
     <figure style="margin:0">
       <img class="clip" src="__OVERLAY__" alt="Annotated jump: pose skeleton with take-off and landing flags and a live metric readout">
-      <figcaption class="clip-cap">Pose skeleton · LOAD / TAKEOFF / LANDING flags · live metric readout</figcaption>
+      <div class="clip-strip"><span>POSE · LOAD → TAKEOFF → LANDING</span><span>__FLIGHT__</span></div>
     </figure>
   </header>
+</div>
 
-  <section id="reach">
-    <div class="sec-head"><span class="n mono">01</span><h2>Reach, to scale</h2></div>
+<section class="court-band" id="reach">
+  <div class="wrap">
+    <div class="sec-head"><span class="ant"></span><h2>Reach, to scale</h2></div>
     <div class="signature">
       __REACH_SVG__
     </div>
-  </section>
+  </div>
+</section>
 
+<div class="wrap">
   <section id="metrics">
-    <div class="sec-head"><span class="n mono">02</span><h2>Measured metrics</h2></div>
-    <div class="readout">
+    <div class="sec-head"><span class="ant"></span><h2>The box score</h2><span class="sec-meta">__SCORE_META__</span></div>
+    <div class="score">
       __READOUT__
     </div>
   </section>
 
   <section id="how">
-    <div class="sec-head"><span class="n mono">03</span><h2>How it works</h2></div>
+    <div class="sec-head"><span class="ant"></span><h2>How it works</h2></div>
     <div class="pipe">
-      <div class="step"><div class="k">01 · capture</div><h3>Side-view video</h3><p>An ordinary phone clip. Treated as source — never copied or committed.</p></div>
-      <div class="step"><div class="k">02 · pose</div><h3>Keypoints</h3><p>MediaPipe tracks 33 body points per frame, on real timestamps.</p></div>
-      <div class="step"><div class="k">03 · physics</div><h3>Metrics engine</h3><p>Detect the jump, then pure, unit-checked physics functions.</p></div>
-      <div class="step"><div class="k">04 · output</div><h3>This page</h3><p>Annotated video, metrics JSON, and charts — regenerated from data.</p></div>
+      <div class="step"><div class="k">01 capture</div><h3>Side-view video</h3><p>An ordinary phone clip. Treated as source — never copied or committed.</p></div>
+      <div class="step"><div class="k">02 pose</div><h3>Keypoints</h3><p>MediaPipe tracks 33 body points per frame, on real timestamps.</p></div>
+      <div class="step"><div class="k">03 physics</div><h3>Metrics engine</h3><p>Detect the jump, then pure, unit-checked physics functions.</p></div>
+      <div class="step"><div class="k">04 output</div><h3>This page</h3><p>Annotated video, metrics JSON, and charts — regenerated from data.</p></div>
     </div>
   </section>
 
   <section id="engineering">
-    <div class="sec-head"><span class="n mono">04</span><h2>Under the hood</h2></div>
+    <div class="sec-head"><span class="ant"></span><h2>Under the hood</h2></div>
     <div class="eng">
       <div><span class="c">✓</span><span>69 tests, 87% coverage — assert ground-truth recovery, not just "it runs"</span></div>
       <div><span class="c">✓</span><span>GitHub Actions CI: lint, type-check, tests on every push</span></div>
@@ -306,16 +392,12 @@ HTML = """<!doctype html>
       <div><span class="c">✓</span><span>Handles phone reality: variable frame rate, rotation, dropped frames</span></div>
       <div><span class="c">✓</span><span>Validated: error analysis + force-plate method comparison</span></div>
     </div>
-    <div class="stack">
-      <span class="chip">Python 3.11</span><span class="chip">MediaPipe</span><span class="chip">OpenCV</span>
-      <span class="chip">NumPy</span><span class="chip">pandas · parquet</span><span class="chip">SciPy</span>
-      <span class="chip">Typer CLI</span><span class="chip">pytest</span><span class="chip">ruff · mypy</span>
-      <span class="chip">GitHub Actions</span><span class="chip">Docker</span>
-    </div>
+    <p class="stack">Python 3.11 · MediaPipe · OpenCV · NumPy · pandas / parquet · SciPy · Typer · pytest · ruff · mypy · GitHub Actions · Docker</p>
   </section>
 
   <footer>
-    <span>Built by Ohm Patel · MIT-licensed</span>
+    <span class="who">Built by Ohm Patel — captain of Brown men's volleyball's D1AAA
+    national-championship team, automating the scouting he did by hand. MIT-licensed.</span>
     <span><a href="https://github.com/ohmppatel920/sideout">github.com/ohmppatel920/sideout</a></span>
   </footer>
 </div>
@@ -338,9 +420,19 @@ def build(run_dir: str | Path) -> Path:
         else ""
     )
 
+    flight = (metrics.get("aggregates") or {}).get("mean_flight_time_s")
+    flight_label = f"FLIGHT {flight:.2f} S" if flight is not None else "NO JUMP DETECTED"
+    n = metrics.get("n_jumps", 0)
+    score_meta = f"jump 1 of {n} · {'calibrated' if metrics.get('calibrated') else 'uncalibrated'}"
+
     html = (
         HTML.replace("__OVERLAY__", overlay_src)
-        .replace("__REACH_SVG__", _reach_diagram(jump) or '<p class="reach-cap">Add --reach-cm to draw this.</p>')
+        .replace("__FLIGHT__", flight_label)
+        .replace("__SCORE_META__", score_meta)
+        .replace(
+            "__REACH_SVG__",
+            _reach_diagram(jump) or '<p class="reach-cap">Add --reach-cm to draw this.</p>',
+        )
         .replace("__READOUT__", _readout_rows(jump) or '<p class="rl">No jump detected.</p>')
         .replace("__METRICS_JSON__", json.dumps(metrics))
     )

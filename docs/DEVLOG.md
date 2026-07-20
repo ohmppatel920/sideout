@@ -205,6 +205,19 @@ height: how high you actually reach at the top of your jump, which is the number
 that matters for blocking and spiking (yours clears the men's net by over a
 foot). It's the one metric that makes the tool read as genuinely volleyball-aware.
 
+**Redesign — the "court graphic" identity (July 20).** The demo page looked
+clean but generic — the exact look every AI tool produces (same fonts, numbered
+labels, little rounded cards). Rebuilt the visual identity from volleyball's
+own materials instead: the orange of a competition court floor with white
+court lines, scoreboard-style condensed type for every big number, a metrics
+table laid out like a **box score**, and the red-and-white **net antenna** as
+the little marker that starts each section. The one showpiece moment is a
+full-bleed court-orange panel where your reach is drawn to scale against the
+net — topped with "2.93 m TOUCH HEIGHT" in scoreboard numerals. Same content,
+same data, same structure underneath (the page is still generated from a run
+by `demo/build_demo.py`), and the v0.2 spec now pins this identity so the
+upcoming interactive version inherits it. All 69 tests still pass.
+
 ## Mini-glossary
 
 - **Pose estimation** — software that finds where a person's joints are in an image.
