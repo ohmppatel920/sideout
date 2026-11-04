@@ -10,6 +10,8 @@ It grew out of scouting a D1AAA national-championship team by hand; sideOut auto
 
 **▶ Live demo: [ohmppatel920.github.io/sideout](https://ohmppatel920.github.io/sideout/)** — a real jump analyzed in the browser (skeleton overlay, event flags, live metrics, to-scale reach diagram). No install.
 
+**Why it exists:** [MARKET.md](MARKET.md) — segment sizing (648 college club teams at nationals vs. ~$1,250/team/yr incumbent spend) and a feature/price benchmark against Hudl, Balltime, and open-source tools.
+
 ---
 
 ## Engineering highlights
