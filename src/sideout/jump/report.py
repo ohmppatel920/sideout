@@ -1,7 +1,7 @@
 """Write a run's analysis to disk: metrics.json + charts.
 
 Reads a run directory's ``keypoints.parquet`` (produced by Phase 1) and
-regenerates outputs *without re-running pose estimation* — fast to iterate on
+regenerates outputs *without re-running pose estimation*, which is fast to iterate on
 metrics and charts. Charts use matplotlib's non-interactive Agg backend so this
 runs headless (CI, servers).
 """
@@ -100,7 +100,7 @@ def write_report(
 ) -> dict[str, Any]:
     """Analyze ``run_dir/keypoints.parquet`` and write metrics.json + charts.
 
-    Does NOT run pose estimation — reads the existing parquet only.
+    Does NOT run pose estimation; reads the existing parquet only.
     """
     run_dir = Path(run_dir)
     parquet = run_dir / "keypoints.parquet"

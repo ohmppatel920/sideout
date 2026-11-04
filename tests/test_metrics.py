@@ -22,7 +22,7 @@ class TestJumpHeightFormula:
             metrics.jump_height_m(-0.1)
 
     def test_purity_no_state(self):
-        # Same input, same output — twice.
+        # Same input, same output, twice.
         assert metrics.jump_height_m(0.47) == metrics.jump_height_m(0.47)
 
 

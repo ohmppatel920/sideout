@@ -1,4 +1,4 @@
-"""The biomechanics metrics engine — PURE functions, no I/O.
+"""The biomechanics metrics engine: PURE functions, no I/O.
 
 Every function takes plain arrays/floats and returns floats. Units are stated
 in every docstring; every physics formula carries its derivation.
@@ -26,7 +26,7 @@ EYE_ANKLE_SPAN_RATIO = EYE_HEIGHT_RATIO - ANKLE_HEIGHT_RATIO  # 0.897
 
 
 def jump_height_m(flight_time_s: float, g_m_s2: float = G_M_S2) -> float:
-    """Jump height [m] from flight time [s] — the flight-time method.
+    """Jump height [m] from flight time [s], via the flight-time method.
 
     Derivation: projectile leaving and landing at the same level with takeoff
     speed v spends t = 2v/g in the air, so v = g·t/2. Apex height

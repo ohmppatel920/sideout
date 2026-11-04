@@ -1,6 +1,6 @@
 """Annotated output video: skeleton + event flags + live metric readout.
 
-Reads the original video (path only — never copied), draws the tracked skeleton
+Reads the original video (path only, never copied), draws the tracked skeleton
 on each frame, flags LOAD / TAKEOFF / LANDING at the detected moments, and shows
 each jump's metrics once it has landed. Writes an ``.mp4``.
 

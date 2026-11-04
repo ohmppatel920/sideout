@@ -3,7 +3,7 @@
 This is the orchestration layer that ties together :mod:`sideout.jump.series`
 (smoothing), :mod:`sideout.jump.events` (detection), and
 :mod:`sideout.jump.metrics` (the pure physics). It contains no I/O and no new
-physics — every number comes from a metrics.py function — so it stays easy to
+physics, since every number comes from a metrics.py function, so it stays easy to
 test and reason about.
 
 Units: heights/depths in meters (when calibrated) and normalized units always;
@@ -95,13 +95,13 @@ def _metrics_for_jump(
     height_m = metrics.jump_height_m(flight)
 
     # Touch height = flat-footed standing reach + jump height (how high the
-    # athlete reaches at the apex — the number that matters for blocking and
+    # athlete reaches at the apex, the number that matters for blocking and
     # spiking). Needs standing reach but no pixel calibration.
     touch_height_m = round(standing_reach_cm / 100.0 + height_m, 4) if standing_reach_cm else None
 
     # Countermovement depth and loading time exist only when a load phase was
     # detected. Without one (e.g. a block jump straight out of the approach)
-    # they are undefined — leave them None rather than fabricating a value.
+    # they are undefined, so leave them None rather than fabricating a value.
     depth_norm: float | None = None
     depth_m: float | None = None
     loading: float | None = None
@@ -162,8 +162,8 @@ def analyze_run(
 
     ``height_cm`` (athlete standing height) unlocks the meter-scaled metrics
     (countermovement depth in meters, approach velocity). ``standing_reach_cm``
-    (flat-footed reach) unlocks touch height. Everything else — jump height
-    (flight-time), loading time, arm-swing timing, normalized depth — is
+    (flat-footed reach) unlocks touch height. Everything else (jump height
+    from flight time, loading time, arm-swing timing, normalized depth) is
     computed with or without them.
     """
     series = build_series(df)

@@ -8,13 +8,13 @@ works from `file://` and from GitHub Pages with no server, no fetch, no build.
 
     uv run python demo/build_demo.py runs/<run-dir>
 
-The page is a *replay* of pipeline outputs — it contains zero physics logic.
+The page is a *replay* of pipeline outputs and contains zero physics logic.
 The Python pipeline stays the single source of truth.
 
 Design language ("court graphic"): FIVB court orange + white court lines +
 sport-hall teal; Barlow Condensed for scoreboard/jersey display type; the
-red/white net antenna as the section marker. One bold moment — the full-bleed
-court panel holding the reach diagram — and quiet hairline structure elsewhere.
+red/white net antenna as the section marker. One bold moment, the full-bleed
+court panel holding the reach diagram, with quiet hairline structure elsewhere.
 """
 
 from __future__ import annotations
@@ -87,7 +87,7 @@ def _antenna_svg(x: float, net_y: float) -> str:
 
 
 def _reach_diagram(jump: dict) -> str:
-    """SVG: the athlete's reach drawn to scale against the net — the signature.
+    """SVG: the athlete's reach drawn to scale against the net. The signature.
 
     Only rendered when touch height is available (needs --reach-cm). Drawn for
     the court panel: white court lines and type on court orange, the jump
@@ -111,7 +111,7 @@ def _reach_diagram(jump: dict) -> str:
     net_y = y(MENS_NET_M)
     parts = [f'<svg viewBox="0 0 360 {h}" role="img" aria-label="Reach to scale versus the net">']
 
-    # metre lines — the court's own line language (ground line solid, rest faint)
+    # metre lines in the court's own line language (ground line solid, rest faint)
     for m in range(0, int(max_m) + 1):
         yy = y(m)
         cls = "ground" if m == 0 else "grid"
@@ -184,7 +184,7 @@ HTML = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>sideOut — Jump Lab</title>
+<title>sideOut: Jump Lab</title>
 <meta name="description" content="Local-first volleyball jump analysis from a single side-view phone video.">
 <meta name="theme-color" content="#D14A24">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -295,7 +295,7 @@ HTML = """<!doctype html>
   .ru { font-family:"Spline Sans Mono",monospace; font-size:.74rem; font-weight:400;
         color:var(--muted); margin-left:.35rem; }
 
-  /* pipeline — a true sequence, so it keeps its numbers */
+  /* pipeline: a true sequence, so it keeps its numbers */
   .pipe { display:grid; grid-template-columns:repeat(4,1fr); gap:1.4rem; }
   .step { border-top:2.5px solid var(--ink); padding-top:.75rem; }
   .step .k { font-family:"Spline Sans Mono",monospace; color:var(--court); font-size:.72rem;
@@ -341,7 +341,7 @@ HTML = """<!doctype html>
       <div class="tape"></div>
       <h1>See the jump<br>in the <em>numbers.</em></h1>
       <p class="lede">sideOut turns one side-view phone video into a full biomechanical
-      readout — height, reach, timing — on your own machine.</p>
+      readout (height, reach, timing) on your own machine.</p>
       <div class="cta">
         <a class="btn solid" href="https://github.com/ohmppatel920/sideout">View source</a>
         <a class="btn ghost" href="#how">How it works</a>
@@ -375,17 +375,17 @@ HTML = """<!doctype html>
   <section id="how">
     <div class="sec-head"><span class="ant"></span><h2>How it works</h2></div>
     <div class="pipe">
-      <div class="step"><div class="k">01 capture</div><h3>Side-view video</h3><p>An ordinary phone clip. Treated as source — never copied or committed.</p></div>
+      <div class="step"><div class="k">01 capture</div><h3>Side-view video</h3><p>An ordinary phone clip. Treated as source, never copied or committed.</p></div>
       <div class="step"><div class="k">02 pose</div><h3>Keypoints</h3><p>MediaPipe tracks 33 body points per frame, on real timestamps.</p></div>
       <div class="step"><div class="k">03 physics</div><h3>Metrics engine</h3><p>Detect the jump, then pure, unit-checked physics functions.</p></div>
-      <div class="step"><div class="k">04 output</div><h3>This page</h3><p>Annotated video, metrics JSON, and charts — regenerated from data.</p></div>
+      <div class="step"><div class="k">04 output</div><h3>This page</h3><p>Annotated video, metrics JSON, and charts, all regenerated from data.</p></div>
     </div>
   </section>
 
   <section id="engineering">
     <div class="sec-head"><span class="ant"></span><h2>Under the hood</h2></div>
     <div class="eng">
-      <div><span class="c">✓</span><span>69 tests, 87% coverage — assert ground-truth recovery, not just "it runs"</span></div>
+      <div><span class="c">✓</span><span>69 tests, 87% coverage, asserting ground-truth recovery from known fixtures</span></div>
       <div><span class="c">✓</span><span>GitHub Actions CI: lint, type-check, tests on every push</span></div>
       <div><span class="c">✓</span><span>Fully typed and mypy-clean; pure, side-effect-free metric functions</span></div>
       <div><span class="c">✓</span><span>Reproducible env (uv + lockfile), one-command Docker</span></div>
@@ -396,7 +396,7 @@ HTML = """<!doctype html>
   </section>
 
   <footer>
-    <span class="who">Built by Ohm Patel — captain of Brown men's volleyball's D1AAA
+    <span class="who">Built by Ohm Patel, captain of Brown men's volleyball's D1AAA
     national-championship team, automating the scouting he did by hand. MIT-licensed.</span>
     <span><a href="https://github.com/ohmppatel920/sideout">github.com/ohmppatel920/sideout</a></span>
   </footer>

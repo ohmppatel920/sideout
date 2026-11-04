@@ -10,7 +10,7 @@ from tests.fixtures import JumpSpec, synthetic_jump_df
 
 class TestNoCountermovement:
     def test_jump_without_load_start_does_not_crash(self):
-        # A detected jump with no clear countermovement (load_start_s is None) —
+        # A detected jump with no clear countermovement (load_start_s is None):
         # e.g. a block jump. Depth and loading are undefined (None), but the
         # rest must still compute and the command must not crash.
         sj = synthetic_jump_df()
@@ -77,7 +77,7 @@ class TestTouchHeight:
         assert a.aggregates["best_touch_height_m"] == pytest.approx(j.touch_height_m)
 
     def test_touch_needs_no_pixel_calibration(self):
-        # Touch height works from reach alone — no --height-cm required.
+        # Touch height works from reach alone, with no --height-cm required.
         a = analyze_run(synthetic_jump_df().df, standing_reach_cm=250.0)
         assert a.calibrated is False
         assert a.jumps[0].touch_height_m is not None

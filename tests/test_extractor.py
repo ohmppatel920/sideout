@@ -26,7 +26,7 @@ def fake_result(x: float = 0.5, y: float = 0.5, visibility: float | None = None)
     """Duck-typed stand-in for a PoseLandmarkerResult with one detected pose.
 
     By default each landmark gets a DISTINCT visibility (id/100) so tests can
-    detect wrong joint-group ID selection — uniform visibility would let a
+    detect wrong joint-group ID selection, where uniform visibility would let a
     swapped ankle/wrist mapping pass unnoticed.
     """
     lm = [
@@ -101,7 +101,7 @@ class TestMeasuredFps:
         assert measured_fps_from_timestamps(t) == pytest.approx(60.0, rel=1e-6)
 
     def test_jittery_timestamps_use_median(self):
-        # 30 fps with one dropped frame (66.7 ms gap) — median unaffected.
+        # 30 fps with one dropped frame (66.7 ms gap); median unaffected.
         t = np.array([0.0, 33.3, 66.7, 133.3, 166.7, 200.0])
         assert measured_fps_from_timestamps(t) == pytest.approx(30.0, rel=0.02)
 
@@ -121,7 +121,7 @@ class TestRepairTimestamps:
 
     def test_isolated_gap_interpolated_from_container_neighbors(self):
         # One mid-stream frame with missing pts must NOT get a foreign
-        # nominal-fps timebase — it is interpolated from its neighbors.
+        # nominal-fps timebase; it is interpolated from its neighbors.
         t = np.array([0.0, 16.0, np.nan, 48.0, 64.0])
         out, source, n = _repair_timestamps(t, 30.0, Path("v.mov"))  # wrong nominal on purpose
         assert out[2] == pytest.approx(32.0)  # neighbor interpolation, not 2*1000/30
@@ -137,7 +137,7 @@ class TestRepairTimestamps:
         assert n == 5
 
     def test_no_timestamps_and_no_fps_raises(self):
-        # A frame index is not a time — refuse to fabricate physics.
+        # A frame index is not a time, so refuse to fabricate physics.
         with pytest.raises(RuntimeError, match="neither frame timestamps nor fps"):
             _repair_timestamps(np.array([np.nan] * 4), 0.0, Path("v.mov"))
 
@@ -202,6 +202,6 @@ class TestCli:
         assert result.exit_code == 0, result.output
         assert "frames processed   : 2" in result.output
         assert "container" in result.output
-        # Summary keys must resolve — a renamed key would KeyError here.
+        # Summary keys must resolve; a renamed key would KeyError here.
         assert "ankles" in result.output and "wrists" in result.output
         assert "jumps detected" in result.output  # Phase 3: analysis summary printed

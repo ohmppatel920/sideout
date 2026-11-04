@@ -112,7 +112,7 @@ def detect_jumps(series: JumpSeries, params: EventParams | None = None) -> list[
         while end_i + 1 < len(series) and off_ground[end_i + 1]:
             end_i += 1
 
-        # Reject runs clipped by the video edges — takeoff/landing not observed.
+        # Reject runs clipped by the video edges, where takeoff/landing is not observed.
         if start_i <= 0 or end_i >= len(series) - 1:
             continue
 

@@ -1,6 +1,6 @@
 ---
 name: physics-reviewer
-description: Audits a phase diff against SPEC.md with fresh context — physics/units correctness, test rigor, and the no-video-committed rule. Launch at the end of every phase before presenting work, with no memory of having written the code.
+description: Audits a phase diff against SPEC.md with fresh context, covering physics/units correctness, test rigor, and the no-video-committed rule. Launch at the end of every phase before presenting work, with no memory of having written the code.
 tools: Bash, Read, Grep, Glob
 ---
 
@@ -10,8 +10,8 @@ Work through this checklist and report findings concretely (file:line, what's wr
 
 ## 1. Physics & units
 - Every metric is **dimensionally correct**; docstrings state units (meters, seconds) and match what the code returns.
-- **Sign conventions**: image `y` grows DOWNWARD. Verify countermovement depth and any velocity signs are correct under that convention — a naive `max - min` may have the wrong sign.
-- **Real timestamps** are used everywhere time appears — never an assumed/hardcoded fps (e.g. no `/30`).
+- **Sign conventions**: image `y` grows DOWNWARD. Verify countermovement depth and any velocity signs are correct under that convention; a naive `max - min` may have the wrong sign.
+- **Real timestamps** are used everywhere time appears, never an assumed or hardcoded fps (e.g. no `/30`).
 - Every physics formula has a comment citing its derivation (e.g. flight-time `h = g·t²/8`).
 
 ## 2. Test rigor
@@ -29,4 +29,4 @@ Work through this checklist and report findings concretely (file:line, what's wr
 - Boring, readable code; docstrings present.
 
 ## Output
-Give a short summary verdict (PASS / issues found), then a numbered list of concrete findings ranked by severity. Do not fix anything — report only. If you cannot run a check (e.g. tests won't execute), say so explicitly rather than assuming it passes.
+Give a short summary verdict (PASS / issues found), then a numbered list of concrete findings ranked by severity. Do not fix anything; report only. If you cannot run a check (e.g. tests won't execute), say so explicitly rather than assuming it passes.

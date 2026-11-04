@@ -1,4 +1,4 @@
-# sideOut — run the Jump Lab pipeline in one command, no local Python needed.
+# sideOut: run the Jump Lab pipeline in one command, no local Python needed.
 #
 #   docker build -t sideout .
 #   docker run --rm -v "$PWD/samples:/data" sideout jump analyze /data/demo.mov --out /data/runs

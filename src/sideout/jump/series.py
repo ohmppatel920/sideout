@@ -1,12 +1,12 @@
 """Keypoint DataFrame → smoothed, uniformly-sampled joint time series.
 
-Everything downstream (events, metrics) consumes a :class:`JumpSeries` —
+Everything downstream (events, metrics) consumes a :class:`JumpSeries`,
 per-frame traces of the joints the jump pipeline cares about, resampled onto a
 uniform time grid and Savitzky–Golay smoothed.
 
 Conventions (repeated everywhere on purpose):
 - Coordinates are **normalized image units**: x, y in [0, 1], and image **y
-  grows DOWNWARD** — an athlete moving up has *decreasing* y.
+  grows DOWNWARD**, so an athlete moving up has *decreasing* y.
 - Time is **seconds**, derived from real container timestamps (``t_ms``),
   never an assumed fps. The uniform grid step is the *median* of the observed
   frame intervals, so variable-frame-rate phone video is handled honestly.
@@ -86,7 +86,7 @@ def build_series(
     2. drop frames where the person was lost (gap rows), remembering the
        largest gap so callers can judge data quality
     3. resample onto a uniform grid (step = median real frame interval) by
-       linear interpolation — Savitzky–Golay assumes uniform sampling
+       linear interpolation, because Savitzky–Golay assumes uniform sampling
     4. smooth positions and differentiate hip y on the same SG window
 
     Raises ``ValueError`` if fewer than 2 frames carry a detected pose.
@@ -103,13 +103,13 @@ def build_series(
     # Frames with any detection: hip trace is not NaN.
     valid = traces["hip_y"].dropna().index
     if len(valid) < 2:
-        raise ValueError("fewer than 2 frames with a detected pose — cannot build series")
+        raise ValueError("fewer than 2 frames with a detected pose; cannot build series")
 
     t_valid_s = (t_by_frame.loc[valid] / 1000.0).to_numpy(dtype=float)
     order = np.argsort(t_valid_s)
     t_valid_s = t_valid_s[order]
 
-    # Largest interpolated gap (s) — quality signal for downstream consumers.
+    # Largest interpolated gap (s), a quality signal for downstream consumers.
     diffs = np.diff(t_valid_s)
     max_gap_s = float(diffs.max()) if len(diffs) else 0.0
     dt_s = float(np.median(diffs[diffs > 0]))

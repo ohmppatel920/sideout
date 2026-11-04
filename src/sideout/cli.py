@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from sideout.jump.analysis import SessionAnalysis
 
 app = typer.Typer(
-    help="sideOut — local-first volleyball performance analysis.", no_args_is_help=True
+    help="sideOut: local-first volleyball performance analysis.", no_args_is_help=True
 )
 jump_app = typer.Typer(
     help="Jump Lab: analyze attack approaches from side-view video.", no_args_is_help=True

@@ -7,10 +7,10 @@ video file and produces a long-format DataFrame:
 
 - ``x, y, z``: normalized image coordinates (x, y in [0, 1]; image y grows
   DOWNWARD). ``z`` is MediaPipe's relative depth (hip-centered, roughly
-  image-width scaled) — treat with caution, monocular.
+  image-width scaled), to be treated with caution since it is monocular.
 - ``world_x/y/z``: MediaPipe world landmarks in METERS, origin at hip center.
   NOTE: world **y also grows DOWNWARD** (same as image y, verified
-  empirically: nose ≈ −0.58 m, ankles ≈ +0.61 m) — not the physics
+  empirically: nose ≈ −0.58 m, ankles ≈ +0.61 m), which is not the physics
   y-up convention the word "world" might suggest.
 - ``t_ms``: real frame timestamp in milliseconds from the container, never an
   assumed fps. Isolated missing timestamps are interpolated from container
@@ -46,7 +46,7 @@ MODEL_URLS = {
 }
 
 
-# Model weights live in a stable per-user cache, not the process CWD — running
+# Model weights live in a stable per-user cache rather than the process CWD, so running
 # `sideout` from another directory must not scatter 9 MB downloads around.
 # Overridable via the SIDEOUT_MODEL_DIR environment variable or the
 # ``model_dir`` parameter.
@@ -229,9 +229,9 @@ def extract_keypoints(
                 if not ok:
                     break
                 # Real presentation timestamp of the decoded frame (ms). Never
-                # assume a fixed fps — phone videos are variable-frame-rate.
+                # assume a fixed fps, because phone videos are variable-frame-rate.
                 # The FFmpeg backend reports 0 for frames with a missing pts;
-                # record NaN and repair after the loop (all-or-nothing — a
+                # record NaN and repair after the loop (all-or-nothing, since a
                 # per-frame fallback would mix timebases in one column).
                 pos = float(cap.get(cv2.CAP_PROP_POS_MSEC))
                 usable = pos > 0.0 or frame_idx == 0

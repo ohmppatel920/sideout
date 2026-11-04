@@ -23,7 +23,7 @@ from sideout.pose.landmarks import N_LANDMARKS, Landmark
 
 # The eye→ankle standing span as a fraction of stature, stated INDEPENDENTLY of
 # the metrics module (Drillis & Contini 1966). Keeping this a separate literal
-# — not an import from metrics — is deliberate: it makes the fixture the
+# rather than an import from metrics, is deliberate: it makes the fixture the
 # ground-truth physiology, so if the metrics constant ever drifts, the
 # calibration test fails instead of silently agreeing with the bug.
 TRUE_EYE_ANKLE_SPAN = 0.897
@@ -134,7 +134,7 @@ def _wrist_z_m(t: float, spec: JumpSpec) -> float:
     """Wrist height relative to its neutral carry [m].
 
     Deliberately independent of hip motion so the wrists' lowest point (max
-    image y) lands *exactly* ``arm_lead_s`` before takeoff — an exact ground
+    image y) lands *exactly* ``arm_lead_s`` before takeoff, giving an exact ground
     truth for the arm-swing timing metric. A smooth 0 → −0.25 m → 0 backswing
     dip (width 0.6 s) centered on that time, plus an overhead reach in flight.
     """

@@ -4,24 +4,24 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 
-**sideOut** is an open-source, local-first volleyball performance-analysis toolkit. It turns an ordinary side-view phone video into biomechanical insight — no cloud, no account, no GPU. The first module, **Jump Lab**, runs pose estimation on an attack approach and derives jump height, countermovement depth, loading time, approach velocity, and arm-swing timing, then produces an annotated video, a metrics JSON, and charts.
+**sideOut** is an open-source, local-first volleyball performance-analysis toolkit. It turns an ordinary side-view phone video into biomechanical insight, with no cloud, no account and no GPU. The first module, **Jump Lab**, runs pose estimation on an attack approach and derives jump height, countermovement depth, loading time, approach velocity, and arm-swing timing, then produces an annotated video, a metrics JSON, and charts.
 
 It grew out of scouting a D1AAA national-championship team by hand; sideOut automates that work.
 
-**▶ Live demo: [ohmppatel920.github.io/sideout](https://ohmppatel920.github.io/sideout/)** — a real jump analyzed in the browser (skeleton overlay, event flags, live metrics, to-scale reach diagram). No install.
+**▶ Live demo: [ohmppatel920.github.io/sideout](https://ohmppatel920.github.io/sideout/)**: a real jump analyzed in the browser (skeleton overlay, event flags, live metrics, to-scale reach diagram). No install.
 
-**Why it exists:** [MARKET.md](MARKET.md) — segment sizing (648 college club teams at nationals vs. ~$1,250/team/yr incumbent spend) and a feature/price benchmark against Hudl, Balltime, and open-source tools.
+**Why it exists:** [MARKET.md](MARKET.md) has the segment sizing (648 college club teams at nationals vs. ~$1,250/team/yr incumbent spend) and a feature/price benchmark against Hudl, Balltime, and open-source tools.
 
 ---
 
 ## Engineering highlights
 
-- **Correctness over coverage theatre** — 69 tests / 87% coverage that assert the metrics *recover ground truth* from synthetic fixtures with known answers, not just "it runs."
-- **Green CI on every push** — GitHub Actions runs `ruff`, `mypy`, and `pytest` (badge above).
-- **Typed and pure** — fully type-annotated; the physics lives in pure, side-effect-free functions, each documenting its units and formula derivation.
-- **Handles real-world input** — variable frame rate (uses true timestamps, never assumes fps), phone rotation metadata, and dropped frames.
-- **Reproducible + shippable** — `uv` lockfile, one-command Docker, and a live auto-deployed demo (GitHub Pages).
-- **Reviewed like real code** — each phase audited by a fresh-context reviewer that caught and fixed real bugs before merge.
+- **Correctness over coverage theatre.** 69 tests at 87% coverage, which assert that the metrics *recover ground truth* from synthetic fixtures built with known answers.
+- **Green CI on every push.** GitHub Actions runs `ruff`, `mypy`, and `pytest` (badge above).
+- **Typed and pure.** Fully type-annotated; the physics lives in pure, side-effect-free functions, each documenting its units and formula derivation.
+- **Handles real-world input.** Variable frame rate (uses true timestamps, never assumes fps), phone rotation metadata, and dropped frames.
+- **Reproducible and shippable.** A `uv` lockfile, one-command Docker, and a live auto-deployed demo (GitHub Pages).
+- **Reviewed like real code.** Each phase was audited by a fresh-context reviewer that caught and fixed real bugs before merge.
 
 ---
 
@@ -51,7 +51,7 @@ Outputs land in `runs/<video-stem>-<timestamp>/`:
 | `chart_metrics_vs_height.png` | Each metric plotted against jump height |
 | `overlay.mp4` | The video with skeleton, event flags, and live metric readout |
 
-`--height-cm` (your standing height) unlocks the metrics that need real-world scale (depth in meters, approach velocity in m/s); `--reach-cm` (your flat-footed standing reach) unlocks **touch height** — how high you reach at the apex, the number coaches care about. Everything else is computed without them.
+`--height-cm` (your standing height) unlocks the metrics that need real-world scale (depth in meters, approach velocity in m/s); `--reach-cm` (your flat-footed standing reach) unlocks **touch height**, meaning how high you reach at the apex, the number coaches care about. Everything else is computed without them.
 
 ### Docker (no local Python)
 
@@ -77,7 +77,7 @@ biomechanics metrics       # pure functions, physics with derivations
 metrics.json + charts + annotated video
 ```
 
-**Design principle:** the video is treated like source code; keypoints and metrics are *derived artifacts*. Raw videos are never committed or copied — path references only.
+**Design principle:** the video is treated like source code; keypoints and metrics are *derived artifacts*. Raw videos are never committed or copied; the repo holds path references to them.
 
 ### The metrics
 
@@ -98,22 +98,22 @@ Every physics formula carries a derivation comment; every metric function states
 
 For trustworthy numbers, film like this:
 
-- **Side view** — camera perpendicular to the approach direction (the athlete moves left↔right across the frame).
-- **Tripod / steady** — a moving camera corrupts the measurements.
+- **Side view.** Camera perpendicular to the approach direction (the athlete moves left↔right across the frame).
+- **Tripod / steady.** A moving camera corrupts the measurements.
 - **~8–10 m back**, with the **whole body in frame** for the entire approach, take-off, and landing.
 - **One athlete clearly dominant** in frame (see limitations).
-- Higher frame rate is better — 60 fps or more tightens the jump-height estimate.
+- Higher frame rate is better; 60 fps or more tightens the jump-height estimate.
 
 ---
 
 ## Accuracy
 
-The jump-height physics is validated and its error is quantified — see
+The jump-height physics is validated and its error is quantified. See
 [`VALIDATION.md`](VALIDATION.md) for the full analysis: the flight-time method
 vs force-plate references (with citations), a frame-rate sensitivity study
 (why 60 fps+ matters), and the engine's tested error floor (≤ ±4 cm on clean
 input). Short version: the biggest real-world risk isn't the physics, it's
-monocular pose tracking the wrong athlete in a crowd — which the capture
+monocular pose tracking the wrong athlete in a crowd, which the capture
 protocol addresses.
 
 ## Honest limitations
@@ -126,16 +126,16 @@ sideOut is a monocular (single-camera) tool. Be aware:
 - **Single-athlete tracking.** On crowded footage (e.g. a full net of players) the pose model may lock onto the wrong person. Use a clip where your athlete is clearly dominant.
 - **Height calibration needs a clean standing pose** at the start of the clip.
 
-These aren't bugs to hide — they're the honest envelope the method is valid within.
+These are the honest envelope the method is valid within, and the docs state them.
 
 ---
 
 ## Module roadmap
 
-- **Jump Lab** ✅ _(v0.1)_ — attack-approach jump analysis.
-- **Film Room** — rally/touch segmentation and searchable match film.
-- **Shot Charts** — attack tendency and location charting.
-- **Lineup Optimizer** — rotation and lineup analysis.
+- **Jump Lab** ✅ _(v0.1)_. Attack-approach jump analysis.
+- **Film Room.** Rally and touch segmentation, with searchable match film.
+- **Shot Charts.** Attack tendency and location charting.
+- **Lineup Optimizer.** Rotation and lineup analysis.
 
 ---
 
@@ -148,8 +148,8 @@ uv run ruff check src tests
 uv run mypy src
 ```
 
-The engine is validated against **synthetic jumps with known ground truth** — the tests assert the metrics recover the values the fixtures were built from, not merely that the code runs. See [`SPEC.md`](SPEC.md) for the architecture and [`docs/DEVLOG.md`](docs/DEVLOG.md) for a plain-English build log.
+The engine is validated against **synthetic jumps with known ground truth**, so the tests assert that the metrics recover the values the fixtures were built from. See [`SPEC.md`](SPEC.md) for the architecture and [`docs/DEVLOG.md`](docs/DEVLOG.md) for a plain-English build log.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT. See [`LICENSE`](LICENSE).

@@ -3,7 +3,7 @@
 The public demo page: **https://ohmppatel920.github.io/sideout/**
 
 It's a self-contained static page (annotated video + metric cards + charts) that
-**replays pre-computed pipeline outputs** — no physics runs in the browser.
+**replays pre-computed pipeline outputs**, so no physics runs in the browser.
 
 ## Publishing the real demo (3 steps)
 
@@ -17,12 +17,12 @@ uv run sideout jump analyze samples/<your-clip>.mov --height-cm <your-height>
 # 2. Build the demo page from that run
 uv run python demo/build_demo.py runs/<run-dir>
 
-# 3. Commit and push — GitHub Pages redeploys automatically
+# 3. Commit and push; GitHub Pages redeploys automatically
 git add demo/ && git commit -m "Publish demo" && git push
 ```
 
 The `demo/assets/overlay.mp4` is a *derived* (rendered) artifact, so it's the one
-video the repo deliberately allows committing — a small, intentional exception to
+video the repo deliberately allows committing, a small and intentional exception to
 the "never commit video" rule, just for the published showcase.
 
 Hosting is already wired up: [`.github/workflows/pages.yml`](../.github/workflows/pages.yml)

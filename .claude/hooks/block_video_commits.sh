@@ -5,7 +5,7 @@
 #   - samples/demo.mp4|mov       the single raw sample clip
 #   - demo/assets/*.mp4          the DERIVED, web-encoded overlay for the
 #                                published demo (a rendered artifact, not raw
-#                                footage) — approved for GitHub Pages hosting.
+#                                footage), approved for GitHub Pages hosting.
 # Exit 2 blocks the tool call; exit 0 allows.
 
 INPUT=$(cat)
@@ -23,7 +23,7 @@ cd "$REPO_DIR" 2>/dev/null || exit 0
 # Check staged files (covers `git add -A` followed by commit, and adds already made).
 BAD=$(git diff --cached --name-only 2>/dev/null | grep -iE '\.(mp4|mov|avi|mkv|m4v|webm)$' | grep -vE '^(samples/demo\.(mp4|mov)|demo/assets/.*\.mp4)$')
 if [ -n "$BAD" ]; then
-  echo "BLOCKED: video staged outside samples/demo.*: $BAD — sideOut never commits raw video (SPEC.md)." >&2
+  echo "BLOCKED: video staged outside samples/demo.*: $BAD. sideOut never commits raw video (SPEC.md)." >&2
   exit 2
 fi
 
@@ -34,7 +34,7 @@ if printf '%s' "$CMD" | grep -q "git add"; then
       samples/demo.mp4|samples/demo.mov) ;;
       demo/assets/*.mp4) ;;
       *.mp4|*.mov|*.avi|*.mkv|*.m4v|*.webm)
-        echo "BLOCKED: git add of video '$TOKEN' — sideOut never commits raw video (SPEC.md)." >&2
+        echo "BLOCKED: git add of video '$TOKEN'. sideOut never commits raw video (SPEC.md)." >&2
         exit 2
         ;;
     esac

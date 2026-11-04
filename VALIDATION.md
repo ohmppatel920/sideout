@@ -1,7 +1,7 @@
 # Validation & error analysis
 
 How accurate are sideOut's numbers, and where do they break? This document is
-deliberately skeptical — the goal is for a reviewer to trust the numbers *or*
+deliberately skeptical. The goal is for a reviewer to trust the numbers *or*
 fairly judge them, not to oversell.
 
 The headline metric is **jump height**, computed with the flight-time method:
@@ -23,7 +23,7 @@ height and is the same physics used by widely validated tools:
 
 - **Bosco, Luhtanen & Komi (1983)** introduced the FT method for jump power. [1]
 - **Balsalobre-Fernández, Glaister & Lockey (2015)** validated a *video*
-  flight-time app (MyJump — the same measurement principle sideOut uses)
+  flight-time app (MyJump, which uses the same measurement principle sideOut does)
   against a force platform and reported near-perfect agreement
   (intraclass correlation ≈ 0.99). [2] This is strong support that a careful
   video flight-time pipeline can match lab equipment.
@@ -37,7 +37,7 @@ being camera-only, cannot; this is disclosed in the README limitations.
 
 > **Takeaway:** the method is valid and well-supported for video, with one known
 > upward bias when landing posture differs from takeoff. Exact effect sizes vary
-> by study and population — confirm against the cited sources for your use case.
+> by study and population, so confirm against the cited sources for your use case.
 
 ---
 
@@ -46,7 +46,7 @@ being camera-only, cannot; this is disclosed in the README limitations.
 A camera locates takeoff and landing only to within a frame, so airtime carries
 a quantization error. sideOut places each event at the **midpoint** between the
 last grounded and first airborne frame, which halves the typical error to about
-half a frame period. Propagating that through `h = g·t²/8` (no data collection —
+half a frame period. Propagating that through `h = g·t²/8` (no data collection,
 pure math, see [`validation/fps_sensitivity.py`](validation/fps_sensitivity.py)):
 
 **Typical jump-height error (cm), midpoint convention (~0.5 frame):**
@@ -90,7 +90,7 @@ suite asserts the pipeline *recovers* those values, not merely that it runs:
   with alternating planted feet.
 
 These tolerances are the engine's error floor on *clean* input. On real footage,
-pose noise and (crucially) tracking the correct athlete dominate — see below.
+pose noise and (crucially) tracking the correct athlete dominate. See below.
 
 ---
 
@@ -106,7 +106,7 @@ Total error on a real clip is the combination of:
 | Height calibration | scales all metric-in-meters | Clean standing pose, accurate `--height-cm` |
 | **Wrong-athlete tracking** | **can be total** | **Single dominant athlete in frame** |
 
-The largest real-world risk is not the physics — it is monocular pose estimation
+The largest real-world risk is monocular pose estimation
 locking onto the wrong person in crowded footage. That is a data-quality
 problem, addressed by the capture protocol, not a flaw in the metrics.
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # PostToolUse hook: run the fast pytest suite after any edit under src/.
-# Deterministic feedback loop — failures surface immediately, not at phase end.
+# Deterministic feedback loop: failures surface immediately rather than at phase end.
 
 INPUT=$(cat)
 FILE=$(printf '%s' "$INPUT" | /usr/bin/python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('file_path',''))" 2>/dev/null)

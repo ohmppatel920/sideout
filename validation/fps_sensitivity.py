@@ -1,4 +1,4 @@
-"""How camera frame rate limits jump-height accuracy — a pure-math analysis.
+"""How camera frame rate limits jump-height accuracy: a pure-math analysis.
 
 The flight-time method computes jump height from airtime: ``h = g·t²/8``. A
 camera can only locate takeoff and landing to within a frame, so the measured
@@ -7,7 +7,7 @@ sideOut's midpoint convention (placing each event halfway between the last
 grounded and first airborne frame) halves the *typical* error to about half a
 frame.
 
-This script needs no data collection — it propagates that timing error through
+This script needs no data collection; it propagates that timing error through
 the real ``jump_height_m`` function and writes a table + a plot. Run it with:
 
     uv run python validation/fps_sensitivity.py
